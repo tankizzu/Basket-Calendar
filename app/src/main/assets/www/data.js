@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 4,
+ "rev": 5,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -42,7 +42,8 @@ window.BASKET_DATA = {
    "giorno": 2,
    "inizio": "17:00",
    "fine": "18:30",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6",
    "dal": "2026-11-27",
    "al": null
   },
@@ -53,7 +54,8 @@ window.BASKET_DATA = {
    "giorno": 2,
    "inizio": "18:45",
    "fine": "20:45",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6",
    "dal": "2026-11-27",
    "al": null
   },
@@ -64,7 +66,8 @@ window.BASKET_DATA = {
    "giorno": 4,
    "inizio": "17:00",
    "fine": "18:30",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6",
    "dal": "2026-11-27",
    "al": null
   },
@@ -75,7 +78,8 @@ window.BASKET_DATA = {
    "giorno": 4,
    "inizio": "18:45",
    "fine": "20:45",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6",
    "dal": "2026-11-27",
    "al": null
   }

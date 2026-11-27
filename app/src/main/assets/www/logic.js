@@ -227,7 +227,7 @@ var Logic = (function () {
         var iso = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
         out.push({
           id: r.id + "-" + iso, team: r.team, tipo: "allenamento", gruppo: r.titolo || "", giornata: "", data: iso, ora: r.inizio, oraFine: r.fine,
-          casa: true, squadraCasa: "", squadraOspite: "", sede: r.sede, stato: "programmata", verifica: "ufficiale",
+          casa: true, squadraCasa: "", squadraOspite: "", sede: r.sede, mappa: r.mappa || "", stato: "programmata", verifica: "ufficiale",
           fonte: "Orario allenamenti indicato da te", note: "", storico: [], collegata: null
         });
       }
