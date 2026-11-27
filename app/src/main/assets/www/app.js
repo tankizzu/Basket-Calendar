@@ -174,7 +174,7 @@
         e.stopPropagation();
         var g = findGame(b.dataset.id);
         if (!g) return;
-        if (b.dataset.act === "map") openUrl(Logic.mapsUrl(g.sede));
+        if (b.dataset.act === "map") openUrl(g.mappa || Logic.mapsUrl(g.sede));
         if (b.dataset.act === "edit") openEditor(g.id);
         if (b.dataset.act === "share") shareOut(Logic.shareText(g, TM[g.team]));
         if (b.dataset.act === "toggle") {
@@ -331,7 +331,8 @@
     var places = {}, order = [], missing = [];
     filtered().filter(Logic.isActive).forEach(function (g) {
       if (!g.sede) { if (!Logic.isPast(g, now)) missing.push(g); return; }
-      if (!places[g.sede]) { places[g.sede] = { sede: g.sede, gare: [] }; order.push(g.sede); }
+      if (!places[g.sede]) { places[g.sede] = { sede: g.sede, gare: [], link: "" }; order.push(g.sede); }
+      if (g.mappa) places[g.sede].link = g.mappa;
       places[g.sede].gare.push(g);
     });
     order.sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
@@ -343,10 +344,10 @@
       return '<div class="card place"><div class="n">' + esc(s) + "</div>" +
         '<div class="m">' + esc(Object.keys(teams).join(", ")) + " · " + p.gare.length + (p.gare.length === 1 ? " impegno" : " impegni") + "</div>" +
         '<div class="m">' + (next ? "Prossima: " + esc(Logic.dayLabel(next.data)) + " ore " + esc(next.ora) + " · " + esc(Logic.matchTitle(next)) : "Nessuna gara futura") + "</div>" +
-        '<div class="actions"><button class="btn ghost" data-map="' + esc(s) + '">Mappa</button></div></div>';
+        '<div class="actions"><button class="btn ghost" data-map="' + esc(p.link || Logic.mapsUrl(s)) + '">Mappa</button></div></div>';
     }).join("") : '<p class="empty">Nessuna sede per i filtri scelti.</p>';
     document.querySelectorAll("#luoghi [data-map]").forEach(function (b) {
-      b.addEventListener("click", function () { openUrl(Logic.mapsUrl(b.dataset.map)); });
+      b.addEventListener("click", function () { openUrl(b.dataset.map); });
     });
     var el = $("senza-sede");
     el.innerHTML = missing.length ? missing.map(function (g) { return gameCard(g, now, true); }).join("") : '<p class="empty">Nessuna.</p>';

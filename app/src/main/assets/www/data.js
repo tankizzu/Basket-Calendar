@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 3,
+ "rev": 4,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -201,13 +201,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Boys 90",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-eso-26",
@@ -269,13 +270,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Ortana",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u17-2a",
@@ -320,13 +322,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Passo Corese",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 12 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-aqu-1",
@@ -354,13 +357,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "C. Futura",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 10 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u14-1a",
@@ -405,13 +409,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Murialdo BK Vit",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u10-2a",
@@ -422,13 +427,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "San Cesareo",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 10 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u14-2a",
@@ -439,13 +445,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Tolfa",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 14 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u12-2a",
@@ -596,13 +603,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Murialdo",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 14 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-sen-5a",
@@ -613,7 +621,7 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Tuscania",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "utente",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
@@ -623,7 +631,8 @@ window.BASKET_DATA = {
      "testo": "ICS 13/11/2026: 19/12/2026 ore 21:30"
     }
    ],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u10-3a",
@@ -702,13 +711,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Amatori",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 12 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u10-4a",
@@ -719,13 +729,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Subiaco",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 10 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u17-6a",
@@ -736,13 +747,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Viterbo BK Accademy",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-u15-13",
@@ -940,13 +952,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Basket Primavalle",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-u15-16",
@@ -1042,13 +1055,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Follis",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 12 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u10-7a",
@@ -1059,13 +1073,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Motta Cam",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 10 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u14-1r",
@@ -1076,13 +1091,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Monterosi",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 14 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-aqu-6",
@@ -1110,13 +1126,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Fiumicino",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u12-3r",
@@ -1127,13 +1144,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Ponte di Nona",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 12 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-aqu-7",
@@ -1304,13 +1322,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Aurelio S.G.",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-sen-3r",
@@ -1321,13 +1340,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "DBN Salario",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-u15-25",
@@ -1372,13 +1392,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Formello",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 14 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u17-3r",
@@ -1389,13 +1410,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Polyssportiva",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-sen-4r",
@@ -1406,13 +1428,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Cristo Re",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "bd-u15-28",
@@ -1491,13 +1514,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Capranica",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 14 UISP",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u17-5r",
@@ -1508,13 +1532,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Civitavecchia",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-sen-6r",
@@ -1525,13 +1550,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Montesacro",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u17-6r",
@@ -1559,13 +1585,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Romana",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-sen-7r",
@@ -1576,13 +1603,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "Ladispoli",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
    "id": "li-u17-8r",
@@ -1610,13 +1638,14 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "LIONS",
    "squadraOspite": "BK Anguillara",
-   "sede": "",
+   "sede": "Palestra di casa LIONS",
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Tabella Under 17 Silver",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   }
  ],
  "regole": {
