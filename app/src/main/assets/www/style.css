@@ -63,3 +63,33 @@ h2{font-size:15px;margin:20px 4px 4px}
 .tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 .tabs button{flex:1;border:0;background:none;padding:14px 4px;font:inherit;color:var(--muted)}
 .tabs button.on{color:var(--ink);font-weight:700}
+.between{justify-content:space-between;align-items:center}
+.btn.small{padding:6px 12px;font-size:13px}
+.btn.danger{background:var(--warn)}
+#filters.hidden{display:none}
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px}
+.month-nav #m-title{font-weight:700;text-transform:capitalize}
+.month-nav .btn{padding:6px 14px;font-size:18px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px}
+.cal .wd{text-align:center;font-size:11px;color:var(--muted);padding:2px 0}
+.cal .c{border:0;background:none;font:inherit;min-height:44px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px 0;color:var(--ink)}
+.cal .c.out{color:#c4c8ce}
+.cal .c.today{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.cal .c.sel{background:var(--ink);color:#fff}
+.cal .dots{display:flex;gap:2px;margin-top:3px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.Bulldogs{background:var(--bulldogs)}.dot.LIONS{background:var(--lions)}.dot.more{background:var(--warn)}
+.cal .c.multi{background:var(--warn-bg)}
+.cal .c.sel.multi{background:var(--warn);color:#fff}
+.legend{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin:8px 4px}
+.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.actions .btn{padding:6px 10px;font-size:13px}
+.place .n{font-weight:600}
+.place .m{font-size:13px;color:var(--muted)}
+.sheet-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20}
+.sheet{display:none;position:fixed;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--card);border-radius:16px 16px 0 0;padding:6px 16px calc(16px + env(safe-area-inset-bottom));z-index:21}
+.sheet.open,.sheet-bg.open{display:block}
+.form input[type=text],.form input[type=date]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.badge.mod{background:#e8f1ff;color:var(--bulldogs)}
+.tabs button{font-size:13px;padding:14px 2px}

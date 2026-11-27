@@ -2,6 +2,8 @@ package it.tankizzu.basketcal;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -63,6 +65,22 @@ public class Bridge {
     @JavascriptInterface
     public String syncCalendar(String calendarId, String eventsJson) {
         return CalendarSync.sync(activity, calendarId, eventsJson);
+    }
+
+    @JavascriptInterface
+    public String getStore(String key) { return prefs(activity).getString("store_" + key, ""); }
+
+    @JavascriptInterface
+    public void setStore(String key, String json) { prefs(activity).edit().putString("store_" + key, json).apply(); }
+
+    @JavascriptInterface
+    public void openUrl(String url) {
+        if (url == null || !(url.startsWith("https://") || url.startsWith("http://"))) return;
+        activity.runOnUiThread(() -> {
+            try {
+                activity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+            } catch (Exception ignored) { }
+        });
     }
 
     @JavascriptInterface

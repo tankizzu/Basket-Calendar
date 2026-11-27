@@ -1063,11 +1063,11 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "Bulldogs",
    "squadraOspite": "PRO Club Under 16",
-   "sede": "Casa · sede da confermare",
+   "sede": "",
    "stato": "recupero",
    "verifica": "utente",
    "fonte": "Aggiornamento utente",
-   "note": "Recupero gara n. 1. Conferma ufficiale da verificare con società/organizzazione.",
+   "note": "Recupero gara n. 1. Conferma ufficiale e sede da verificare con società/organizzazione.",
    "storico": [
     {
      "testo": "Proposta precedente: 30/01/2027 ore 16:00 (superata)"

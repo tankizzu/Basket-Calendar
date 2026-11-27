@@ -12,8 +12,8 @@
 </header>
 
 <main>
-  <!-- PARTITE -->
-  <section id="view-partite" class="view active">
+  <!-- Filtro comune a Partite, Calendario e Luoghi -->
+  <div id="filters">
     <div class="seg" id="scope">
       <button data-scope="mie" class="on">Le mie</button>
       <button data-scope="Bulldogs">Bulldogs</button>
@@ -21,8 +21,27 @@
       <button data-scope="tutte">Tutte</button>
     </div>
     <div class="chips" id="team-chips"></div>
-    <label class="check"><input type="checkbox" id="show-past"> Mostra partite passate</label>
+  </div>
+
+  <!-- PARTITE -->
+  <section id="view-partite" class="view active">
+    <div class="row between">
+      <label class="check"><input type="checkbox" id="show-past"> Mostra passate</label>
+      <button class="btn small" id="btn-add">+ Aggiungi gara</button>
+    </div>
     <div id="list"></div>
+  </section>
+
+  <!-- CALENDARIO -->
+  <section id="view-calendario" class="view">
+    <div class="month-nav">
+      <button class="btn ghost" id="m-prev" aria-label="Mese precedente">‹</button>
+      <div id="m-title"></div>
+      <button class="btn ghost" id="m-next" aria-label="Mese successivo">›</button>
+    </div>
+    <div class="cal" id="cal-grid"></div>
+    <div class="legend"><span class="dot Bulldogs"></span> Bulldogs <span class="dot LIONS"></span> LIONS <span class="dot more"></span> 2+ gare</div>
+    <div id="cal-day"></div>
   </section>
 
   <!-- INCROCI -->
@@ -42,11 +61,24 @@
     <div id="vincolo"></div>
   </section>
 
+  <!-- LUOGHI -->
+  <section id="view-luoghi" class="view">
+    <p class="hint">Palestre delle squadre filtrate. Tocca "Mappa" per aprire Google Maps.</p>
+    <div id="luoghi"></div>
+    <h2>Gare senza sede</h2>
+    <p class="hint">Il calendario non indica il luogo. Imposta la palestra di casa in Impostazioni o modifica la singola gara.</p>
+    <div id="senza-sede"></div>
+  </section>
+
   <!-- IMPOSTAZIONI -->
   <section id="view-impostazioni" class="view">
     <h2>Squadre</h2>
     <p class="hint">Scegli quali squadre ti mandano notifiche e quali vanno nel calendario Google.</p>
     <div id="team-settings"></div>
+
+    <h2>Palestra di casa</h2>
+    <p class="hint">Usata per le gare in casa che nel calendario non hanno la sede.</p>
+    <div class="card form" id="sede-casa"></div>
 
     <h2>Promemoria</h2>
     <div class="card form">
@@ -82,14 +114,59 @@
       <p class="status" id="sync-status"></p>
     </div>
 
+    <h2>Modifiche tue</h2>
+    <div class="card form">
+      <p class="status" id="edits-status"></p>
+      <div class="row">
+        <button class="btn ghost" id="btn-restore-del">Ripristina gare eliminate</button>
+      </div>
+    </div>
+
     <p class="hint small" id="data-version"></p>
   </section>
 </main>
 
+<!-- Editor gara -->
+<div class="sheet-bg" id="sheet-bg"></div>
+<div class="sheet" id="sheet">
+  <h2 id="ed-title">Modifica gara</h2>
+  <div class="form">
+    <label id="ed-team-wrap">Squadra <select id="ed-team"></select></label>
+    <div class="row2">
+      <label>Data <input type="date" id="ed-data"></label>
+      <label>Ora <input type="time" id="ed-ora"></label>
+    </div>
+    <label>Casa / trasferta
+      <select id="ed-casa"><option value="1">In casa</option><option value="0">In trasferta</option></select>
+    </label>
+    <label>Avversario <input type="text" id="ed-avv"></label>
+    <label>Sede (palestra e indirizzo) <input type="text" id="ed-sede"></label>
+    <label>Stato
+      <select id="ed-stato">
+        <option value="programmata">Programmata</option>
+        <option value="recupero">Recupero</option>
+        <option value="annullata">Annullata</option>
+      </select>
+    </label>
+    <label>Note <input type="text" id="ed-note"></label>
+    <p class="status ko" id="ed-err"></p>
+    <div class="row">
+      <button class="btn" id="ed-save">Salva gara</button>
+      <button class="btn ghost" id="ed-cancel">Chiudi</button>
+    </div>
+    <div class="row">
+      <button class="btn ghost" id="ed-reset">Ripristina originale</button>
+      <button class="btn danger" id="ed-delete">Elimina gara</button>
+    </div>
+  </div>
+</div>
+
 <nav class="tabs">
   <button data-view="partite" class="on">Partite</button>
+  <button data-view="calendario">Calendario</button>
   <button data-view="incroci">Incroci</button>
-  <button data-view="impostazioni">Impostazioni</button>
+  <button data-view="luoghi">Luoghi</button>
+  <button data-view="impostazioni">Impost.</button>
 </nav>
 
 <script src="data.js"></script>
