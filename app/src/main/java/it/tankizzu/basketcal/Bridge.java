@@ -154,5 +154,25 @@ public class Bridge {
     }
 
     @JavascriptInterface
+    public boolean hasApiKey() { return !prefs(activity).getString("mistralKey", "").isEmpty(); }
+
+    @JavascriptInterface
+    public void setApiKey(String key) { prefs(activity).edit().putString("mistralKey", key == null ? "" : key.trim()).apply(); }
+
+    /** Analizza in background la foto del referto; risposta a window.__fetchCb(id, ok, json). */
+    @JavascriptInterface
+    public void analyzePhoto(String name, String id) {
+        String key = prefs(activity).getString("mistralKey", "");
+        new Thread(() -> {
+            String out;
+            if (name == null || name.contains("/")) out = "{\"ok\":false,\"errore\":\"foto non valida\"}";
+            else if (key.isEmpty()) out = "{\"ok\":false,\"errore\":\"manca la chiave API\"}";
+            else out = RefertoAI.analyze(activity, new java.io.File(MainActivity.photoDir(activity), name), key);
+            activity.runJs("window.__fetchCb && window.__fetchCb(" + org.json.JSONObject.quote(id) + ",true,"
+                    + org.json.JSONObject.quote(out) + ")");
+        }).start();
+    }
+
+    @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }

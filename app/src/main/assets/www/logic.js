@@ -106,6 +106,29 @@ var Logic = (function () {
     return out;
   }
 
+  // Converte la lettura del referto (squadra A/B) in casa/ospite della gara.
+  function mapReferto(dati, g, t) {
+    function n(x) { return x === null || x === undefined || x === "" || isNaN(+x) ? null : +x; }
+    var club = t.club.toLowerCase().replace(/s$/, "");
+    var nameA = String(dati.squadraA || "").toLowerCase(), nameB = String(dati.squadraB || "").toLowerCase();
+    var mineIsA = nameA.indexOf(club) >= 0 ? true : (nameB.indexOf(club) >= 0 ? false : null);
+    var mineIsCasa = g.squadraCasa === t.club;
+    // senza nomi riconoscibili si assume A = squadra di casa, come di consueto sui referti
+    var swap = mineIsA === null ? false : (mineIsA !== mineIsCasa);
+    var parz = (dati.parziali || []).filter(function (p) { return p && n(p[0]) !== null && n(p[1]) !== null; })
+      .map(function (p) { return swap ? [n(p[1]), n(p[0])] : [n(p[0]), n(p[1])]; });
+    var fa = n(dati.finaleA), fb = n(dati.finaleB);
+    var res = { casa: swap ? fb : fa, ospite: swap ? fa : fb, parziali: parz, avvisi: [] };
+    if (mineIsA === null) res.avvisi.push("Non ho riconosciuto le squadre: controlla che casa e ospite siano giusti.");
+    if (parz.length && res.casa !== null && res.ospite !== null) {
+      var sc = 0, so = 0;
+      parz.forEach(function (p) { sc += p[0]; so += p[1]; });
+      if (sc !== res.casa || so !== res.ospite) res.avvisi.push("La somma dei parziali (" + sc + "–" + so + ") non corrisponde al finale.");
+    }
+    if (dati.dubbi) res.avvisi.push("Cifre incerte: " + dati.dubbi);
+    return res;
+  }
+
   function minutes(hhmm) { var p = hhmm.split(":").map(Number); return p[0] * 60 + p[1]; }
 
   // Allenamenti che si sovrappongono a una gara nello stesso giorno (gara considerata di 2 ore).
@@ -375,7 +398,7 @@ var Logic = (function () {
   }
 
   return {
-    applyEdits: applyEdits, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
+    applyEdits: applyEdits, mapReferto: mapReferto, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
     teamMap: teamMap, toDate: toDate, dayLabel: dayLabel, shortDate: shortDate, teamLabel: teamLabel,
     isActive: isActive, isPast: isPast, overlaps: overlaps, checkU15Weekend: checkU15Weekend,
     matchTitle: matchTitle, buildReminders: buildReminders, buildCalendarEvents: buildCalendarEvents,

@@ -122,6 +122,14 @@
       <p class="status" id="sync-status"></p>
     </div>
 
+    <h2>Lettura automatica dei referti</h2>
+    <div class="card form">
+      <p class="hint">Gratis con Mistral: su console.mistral.ai crea un account (serve solo il numero di telefono, nessuna carta), poi in API Keys crea una chiave e incollala qui. In Admin → Privacy disattiva l'uso dei dati per l'addestramento: i referti contengono i nomi dei ragazzi. La chiave resta solo sul telefono.</p>
+      <p class="status" id="ai-status"></p>
+      <label>Chiave API Mistral <input type="password" id="ai-key" autocomplete="off"></label>
+      <div class="row"><button class="btn" id="ai-save">Salva chiave</button></div>
+    </div>
+
     <h2>Modifiche tue</h2>
     <div class="card form">
       <p class="status" id="edits-status"></p>
@@ -183,6 +191,7 @@
     <h2>Foto del referto</h2>
     <div id="rs-photos" class="thumbs"></div>
     <div class="row"><button class="btn ghost" id="rs-add-photo">Aggiungi foto referto</button></div>
+    <p class="status" id="rs-info"></p>
     <p class="status ko" id="rs-err"></p>
     <div class="row">
       <button class="btn" id="rs-save">Salva risultato</button>
