@@ -329,7 +329,6 @@ var Logic = (function () {
       lines.push(g.casa ? "🏠 In casa" : "🚌 In trasferta");
     }
     lines.push("📍 " + (g.sede || "Sede da definire"));
-    if (g.sede) lines.push("🗺️ " + mapsUrl(g.sede));
     if (g.stato === "recupero") lines.push("🔁 Recupero");
     if (g.verifica === "utente" && !isTraining(g)) lines.push("⚠️ Da confermare");
     if (g.noteUtente) lines.push("📝 " + g.noteUtente);
