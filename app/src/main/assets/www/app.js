@@ -748,7 +748,7 @@
     });
   }
   $("rs-add-photo").addEventListener("click", function () {
-    if (!A || !A.pickPhoto) { $("rs-err").textContent = "Le foto si aggiungono dall'app sul telefono."; return; }
+    if (!A || !A.pickPhoto) { $("rs-err").textContent = "Le foto del referto si aggiungono solo dall'app Android."; return; }
     A.pickPhoto(resId);
   });
   // Richiamata da Android dopo aver salvato la foto scelta.
@@ -1011,7 +1011,7 @@
     $("team-settings").innerHTML = BASE.squadre.map(function (t) {
       var s = settings.squadre[t.id];
       var n = DATA.partite.filter(function (g) { return g.team === t.id; }).length;
-      var role = t.ruolo ? t.ruolo : "quadro generale";
+      var role = t.ruolo ? t.ruolo : (CFG.club ? t.campionato : "quadro generale");
       return '<div class="card trow">' +
         '<div><div class="n">' + esc(Logic.teamLabel(t)) + '</div><div class="r">' + esc(role) + " · " +
         (n ? n + " gare" : esc(t.nota || "nessuna gara")) + "</div></div>" +
@@ -1199,6 +1199,14 @@
   rebuild();
   renderVersion();
   if (["mie", "Bulldogs", "LIONS", "tutte"].indexOf(filtri.scope) >= 0) ui.scope = filtri.scope;
+  if (CFG.web) {
+    document.body.classList.add("web-app");
+    var feeds = [["bulldogs.ics", "Tutto " + CFG.club + " (gare e allenamenti)"]];
+    BASE.squadre.forEach(function (t) { feeds.push(["bulldogs-" + t.id.replace(/^bd-/, "") + ".ics", Logic.teamLabel(t)]); });
+    $("ics-list").innerHTML = feeds.map(function (f) {
+      return '<a class="ics-row" href="' + esc(CFG.ics.replace(/^https:/, "webcal:") + f[0]) + '">' + esc(f[1]) + "<span>Abbonati</span></a>";
+    }).join("");
+  }
   if (CFG.club) {
     ui.scope = CFG.club;
     document.body.classList.add("club-app");

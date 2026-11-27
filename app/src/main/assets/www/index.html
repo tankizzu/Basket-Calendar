@@ -91,9 +91,19 @@
 
   <!-- IMPOSTAZIONI -->
   <section id="view-impostazioni" class="view">
+    <div class="solo-web" id="web-cal">
+    <h2>Calendario dell'iPhone</h2>
+    <p class="hint">Tocca un calendario per abbonarti: le partite entrano nel Calendario dell'iPhone, con un avviso 3 ore prima, e si aggiornano da sole quando cambiano.</p>
+    <div class="card" id="ics-list"></div>
+    <h2>Installa sulla schermata Home</h2>
+    <p class="hint">In Safari tocca il pulsante Condividi (il quadrato con la freccia) e poi «Aggiungi alla schermata Home». L'app si aprirà a tutto schermo.</p>
+    </div>
+
+    <div class="solo-app">
     <h2>Squadre</h2>
     <p class="hint">Scegli quali squadre ti mandano notifiche e quali vanno nel calendario Google.</p>
     <div id="team-settings"></div>
+    </div>
 
     <h2>Palestra di casa</h2>
     <p class="hint">Usata per le gare in casa che nel calendario non hanno la sede.</p>
@@ -131,6 +141,7 @@
     </div>
     </div>
 
+    <div class="solo-app">
     <h2>Promemoria</h2>
     <div class="card form">
       <label>Organizzazione: giorni prima
@@ -148,7 +159,9 @@
         <button class="btn ghost" id="btn-notif-test">Notifica di prova</button>
       </div>
     </div>
+    </div>
 
+    <div class="solo-app">
     <h2>Google Calendar</h2>
     <div class="card form">
       <p class="hint">Crea una volta sola un calendario chiamato per esempio "Basket" su calendar.google.com, poi sceglilo qui. L'app ci inserisce solo le squadre con Calendar attivo, aggiorna le gare cambiate e toglie quelle deselezionate.</p>
@@ -163,6 +176,7 @@
         <button class="btn" id="btn-cal-sync">Sincronizza ora</button>
       </div>
       <p class="status" id="sync-status"></p>
+    </div>
     </div>
 
     <h2>Modifiche tue</h2>

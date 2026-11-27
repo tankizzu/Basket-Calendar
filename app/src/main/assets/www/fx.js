@@ -191,6 +191,13 @@ var FX = (function () {
 
   function shareImage(dataUrl, name) {
     if (A && A.shareImage) { A.shareImage(dataUrl.split(",")[1], name); return; }
+    // iPhone/browser: condivisione del file se disponibile, altrimenti scarica
+    try {
+      var bin = atob(dataUrl.split(",")[1]), arr = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      var file = new File([arr], name, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { navigator.share({ files: [file] }).catch(function () {}); return; }
+    } catch (e) {}
     var a = document.createElement("a"); a.href = dataUrl; a.download = name; a.click();
   }
 

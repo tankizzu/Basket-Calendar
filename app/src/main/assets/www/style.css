@@ -280,3 +280,8 @@ body,.top,.btn,.tabs button{transition:background .35s var(--ease),color .35s va
 .hero .live-wrap{font-size:22px;white-space:nowrap}
 body.club-app .solo-personale,body.club-app #scope{display:none}
 .top h1 .app-title{color:var(--ink);font-weight:inherit}
+body:not(.web-app) .solo-web{display:none}
+body.web-app .solo-app{display:none}
+.ics-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);font-weight:600}
+.ics-row:last-child{border-bottom:0}
+.ics-row span{font-size:12px;color:var(--bulldogs);font-weight:700;white-space:nowrap}
