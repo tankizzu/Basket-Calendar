@@ -6,7 +6,10 @@ const ROOT = path.join(__dirname, "..");
 const WWW = path.join(ROOT, "app/src/main/assets/www");
 const OUT = path.join(ROOT, "_site");
 const BASE_URL = "https://tankizzu.github.io/Basket-Calendar/";
-const CLUB = "Bulldogs", SLUG = "bulldogs";
+const CLUBS = [
+  { club: "Bulldogs", slug: "bulldogs", nome: "Calendari Bulldogs", corto: "Bulldogs", apk: "CalendariBulldogs", colore: "#2443c8", prefisso: "bd-" },
+  { club: "LIONS", slug: "lions", nome: "Calendari LIONS", corto: "LIONS", apk: "CalendariLions", colore: "#1f7a3d", prefisso: "li-" }
+];
 
 function copyDir(a, b) {
   fs.mkdirSync(b, { recursive: true });
@@ -17,18 +20,26 @@ function copyDir(a, b) {
 }
 
 fs.rmSync(OUT, { recursive: true, force: true });
+const ctx = { window: {} }; vm.createContext(ctx);
+vm.runInContext(fs.readFileSync(path.join(WWW, "data.js"), "utf8"), ctx);
+const L = require(path.join(WWW, "logic.js"));
+const raw = ctx.window.BASKET_DATA;
+let totale = [];
+
+for (const K of CLUBS) {
+const CLUB = K.club, SLUG = K.slug;
 const app = path.join(OUT, SLUG);
 copyDir(WWW, app);
 copyDir(path.join(ROOT, "web/icons"), path.join(app, "icons"));
 
 fs.writeFileSync(path.join(app, "config.js"),
-  `window.APP_CONFIG = { club: "${CLUB}", nome: "Calendari Bulldogs", apk: "CalendariBulldogs", web: true, ics: "${BASE_URL}${SLUG}/ics/" };\n`);
+  `window.APP_CONFIG = { club: "${CLUB}", nome: "${K.nome}", apk: "${K.apk}", web: true, slug: "${SLUG}", ics: "${BASE_URL}${SLUG}/ics/" };\n`);
 
 fs.writeFileSync(path.join(app, "manifest.webmanifest"), JSON.stringify({
-  name: "Calendari Bulldogs", short_name: "Bulldogs", start_url: "./", scope: "./", display: "standalone",
-  background_color: "#f3f4f6", theme_color: "#2443c8", lang: "it",
-  icons: [{ src: "icons/bulldogs-192.png", sizes: "192x192", type: "image/png" },
-          { src: "icons/bulldogs-512.png", sizes: "512x512", type: "image/png" }]
+  name: K.nome, short_name: K.corto, start_url: "./", scope: "./", display: "standalone",
+  background_color: "#f3f4f6", theme_color: K.colore, lang: "it",
+  icons: [{ src: "icons/" + SLUG + "-192.png", sizes: "192x192", type: "image/png" },
+          { src: "icons/" + SLUG + "-512.png", sizes: "512x512", type: "image/png" }]
 }, null, 1));
 
 // Cache per l'uso senza rete; data.js sempre dalla rete se possibile.
@@ -43,22 +54,18 @@ self.addEventListener("fetch", e => {
 `);
 
 let html = fs.readFileSync(path.join(app, "index.html"), "utf8");
-html = html.replace("<title>Calendari Basket</title>", `<title>Calendari Bulldogs</title>
+html = html.replace("<title>Calendari Basket</title>", `<title>${K.nome}</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icons/bulldogs-180.png">
+<link rel="apple-touch-icon" href="icons/${SLUG}-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Bulldogs">
+<meta name="apple-mobile-web-app-title" content="${K.corto}">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#2443c8">`);
+<meta name="theme-color" content="${K.colore}">`);
 html = html.replace("</body>", `<script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () {});</script>\n</body>`);
 fs.writeFileSync(path.join(app, "index.html"), html);
 
 // ---------- Calendari .ics ----------
-const ctx = { window: {} }; vm.createContext(ctx);
-vm.runInContext(fs.readFileSync(path.join(WWW, "data.js"), "utf8"), ctx);
-const L = require(path.join(WWW, "logic.js"));
-const raw = ctx.window.BASKET_DATA;
 const keep = {};
 const base = Object.assign({}, raw, {
   squadre: raw.squadre.filter(t => t.club === CLUB && (keep[t.id] = true)),
@@ -93,7 +100,7 @@ function ics(nome, games) {
     const t = TM[g.team], tr = L.isTraining(g);
     let fine = g.oraFine;
     if (!fine) { const e = new Date(L.toDate(g.data, g.ora).getTime() + 2 * 3600000); fine = pad(e.getHours()) + ":" + pad(e.getMinutes()); }
-    const titolo = tr ? "Allenamento Bulldogs" : "[" + t.nome + "] " + L.matchTitle(g) + (g.verifica === "utente" ? " (da confermare)" : "");
+    const titolo = tr ? L.matchTitle(g).replace(/ \d\d:\d\d–\d\d:\d\d$/, "") : "[" + t.nome + "] " + L.matchTitle(g) + (g.verifica === "utente" ? " (da confermare)" : "");
     const desc = [tr ? "" : t.campionato, tr ? "" : (g.casa ? "In casa" : "In trasferta"),
       g.ritrovo ? "Ritrovo ore " + g.ritrovo + (g.luogoRitrovo ? " · " + g.luogoRitrovo : "") : "",
       g.stato === "recupero" ? "Recupero" : "", g.note || ""].filter(Boolean).join("\n");
@@ -112,15 +119,24 @@ function ics(nome, games) {
 
 const dir = path.join(app, "ics"); fs.mkdirSync(dir, { recursive: true });
 const all = D.partite.filter(g => !(L.isTraining(g) && g.stato === "annullata"));
-fs.writeFileSync(path.join(dir, "bulldogs.ics"), ics("Bulldogs – tutte", all));
-const feeds = [["bulldogs.ics", "Tutto Bulldogs (gare e allenamenti)"]];
+fs.writeFileSync(path.join(dir, SLUG + ".ics"), ics(K.corto + " – tutte", all));
+const feeds = [[SLUG + ".ics", "Tutto " + K.corto + " (gare e allenamenti)"]];
 D.squadre.forEach(t => {
-  const f = "bulldogs-" + t.id.replace(/^bd-/, "") + ".ics";
+  const f = SLUG + "-" + t.id.replace(K.prefisso, "") + ".ics";
   fs.writeFileSync(path.join(dir, f), ics(L.teamLabel(t), all.filter(g => g.team === t.id)));
   feeds.push([f, L.teamLabel(t)]);
 });
 fs.writeFileSync(path.join(dir, "elenco.json"), JSON.stringify(feeds));
 
-// Pagina iniziale del sito: porta all'app.
-fs.writeFileSync(path.join(OUT, "index.html"), `<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=${SLUG}/"><a href="${SLUG}/">Calendari Bulldogs</a>`);
-console.log("ok", all.length, "eventi;", feeds.length, "calendari");
+totale.push(SLUG + ": " + all.length + " eventi, " + feeds.length + " calendari");
+}
+
+// Pagina iniziale: scelta del club.
+fs.writeFileSync(path.join(OUT, "index.html"), `<!DOCTYPE html><html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>Calendari Basket</title>
+<style>body{margin:0;font:16px system-ui,-apple-system,sans-serif;background:#f3f4f6;color:#111318;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;padding:24px;box-sizing:border-box}
+h1{font-size:22px;margin:0 0 8px}a{display:flex;align-items:center;gap:14px;width:100%;max-width:340px;padding:16px;border-radius:18px;background:#fff;text-decoration:none;color:inherit;font-weight:700;font-size:18px;box-shadow:0 4px 14px rgba(0,0,0,.06);border:1px solid #e5e7eb}
+img{width:56px;height:56px;border-radius:50%}</style></head><body><h1>Scegli il tuo club</h1>
+${CLUBS.map(K => `<a href="${K.slug}/"><img src="${K.slug}/img/${K.slug}.png" alt="">${K.nome}</a>`).join("\n")}
+</body></html>`);
+console.log("ok", totale.join(" · "));

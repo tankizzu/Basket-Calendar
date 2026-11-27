@@ -1201,8 +1201,9 @@
   if (["mie", "Bulldogs", "LIONS", "tutte"].indexOf(filtri.scope) >= 0) ui.scope = filtri.scope;
   if (CFG.web) {
     document.body.classList.add("web-app");
-    var feeds = [["bulldogs.ics", "Tutto " + CFG.club + " (gare e allenamenti)"]];
-    BASE.squadre.forEach(function (t) { feeds.push(["bulldogs-" + t.id.replace(/^bd-/, "") + ".ics", Logic.teamLabel(t)]); });
+    var sl = CFG.slug || "bulldogs";
+    var feeds = [[sl + ".ics", "Tutto " + CFG.club + " (gare e allenamenti)"]];
+    BASE.squadre.forEach(function (t) { feeds.push([sl + "-" + t.id.replace(/^(bd|li)-/, "") + ".ics", Logic.teamLabel(t)]); });
     $("ics-list").innerHTML = feeds.map(function (f) {
       return '<a class="ics-row" href="' + esc(CFG.ics.replace(/^https:/, "webcal:") + f[0]) + '">' + esc(f[1]) + "<span>Abbonati</span></a>";
     }).join("");
