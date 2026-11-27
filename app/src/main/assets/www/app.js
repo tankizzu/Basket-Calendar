@@ -99,18 +99,31 @@
   }
 
   // ---------- Navigazione ----------
-  document.querySelectorAll(".tabs button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      ui.view = b.dataset.view;
-      document.querySelectorAll(".tabs button").forEach(function (x) { x.classList.toggle("on", x === b); });
-      document.querySelectorAll(".view").forEach(function (v) {
-        v.classList.toggle("active", v.id === "view-" + ui.view);
-      });
-      $("filters").classList.toggle("hidden", ["partite", "calendario", "luoghi"].indexOf(ui.view) < 0);
-      if (ui.view === "stats") renderStats();
-      window.scrollTo(0, 0);
+  var VIEWS = ["partite", "calendario", "incroci", "stats", "luoghi", "impostazioni"];
+  function goView(view) {
+    if (view === ui.view) return;
+    var dir = VIEWS.indexOf(view) > VIEWS.indexOf(ui.view) ? "from-right" : "from-left";
+    ui.view = view;
+    document.querySelectorAll(".tabs button").forEach(function (x) { x.classList.toggle("on", x.dataset.view === view); });
+    document.querySelectorAll(".view").forEach(function (v) {
+      var on = v.id === "view-" + view;
+      v.classList.remove("from-right", "from-left");
+      v.classList.toggle("active", on);
+      if (on) v.classList.add(dir);
     });
+    $("filters").classList.toggle("hidden", ["partite", "calendario", "luoghi"].indexOf(view) < 0);
+    if (view === "stats") renderStats();
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll(".tabs button").forEach(function (b) {
+    b.addEventListener("click", function () { goView(b.dataset.view); });
   });
+  // Scorri a destra/sinistra per cambiare scheda (nel calendario cambia mese).
+  FX.swipe(document.querySelector("main"), function () {
+    var i = VIEWS.indexOf(ui.view); if (i < VIEWS.length - 1) goView(VIEWS[i + 1]);
+  }, function () {
+    var i = VIEWS.indexOf(ui.view); if (i > 0) goView(VIEWS[i - 1]);
+  }, "#cal-grid,#filters,.icon-pick");
 
   // ---------- Filtri ----------
   function scopeTeams() {
@@ -142,9 +155,18 @@
     b.addEventListener("click", function () {
       ui.scope = b.dataset.scope;
       document.querySelectorAll("#scope button").forEach(function (x) { x.classList.toggle("on", x === b); });
+      applyClubTheme();
       renderChips(); renderFiltered();
     });
   });
+
+  function applyClubTheme() {
+    var club = ui.scope === "Bulldogs" || ui.scope === "LIONS" ? ui.scope : "";
+    if (club) {
+      document.body.dataset.club = club;
+      $("club-logo").src = "img/" + (club === "LIONS" ? "lions" : "bulldogs") + ".png";
+    } else delete document.body.dataset.club;
+  }
 
   function filtered() {
     return DATA.partite.filter(function (g) { return ui.teams[g.team]; });
@@ -190,6 +212,7 @@
       (g.sede ? '<button class="btn ghost" data-act="map" data-id="' + g.id + '">Mappa</button>' : "") +
       '<button class="btn ghost" data-act="share" data-id="' + g.id + '">Condividi</button>' +
       (Logic.isTraining(g) ? "" : '<button class="btn ghost" data-act="result" data-id="' + g.id + '">Risultato e referto</button>') +
+      (Logic.isTraining(g) || g.stato === "annullata" ? "" : '<button class="btn ghost" data-act="img" data-id="' + g.id + '">Grafica</button>') +
       '<button class="btn ghost" data-act="edit" data-id="' + g.id + '">Modifica</button>' +
       '<button class="btn ghost" data-act="toggle" data-id="' + g.id + '">' + (g.stato === "annullata" ? "Ripristina gara" : "Segna annullata") + "</button>" +
       "</div>";
@@ -222,9 +245,11 @@
         if (b.dataset.act === "map") openUrl(g.mappa || Logic.mapsUrl(g.sede));
         if (b.dataset.act === "edit") openEditor(g.id);
         if (b.dataset.act === "result") openResult(g.id);
+        if (b.dataset.act === "img") openImage(g.id);
         if (b.dataset.act === "share") shareOut(Logic.shareText(g, TM[g.team]));
         if (b.dataset.act === "toggle") {
           setMod(g.id, { stato: g.stato === "annullata" ? baseStato(g.id) : "annullata" });
+          FX.vibrate(g.stato === "annullata" ? 12 : 30);
           saveEdits();
         }
       });
@@ -279,11 +304,32 @@
     if (!next) { $("hero").innerHTML = ""; return; }
     var t = TM[next.team];
     $("hero").innerHTML = '<div class="hero ' + t.club + '"><img class="logo" alt="" src="img/' + (t.club === "LIONS" ? "lions" : "bulldogs") + '.png"><div class="k">Prossima partita · ' + esc(Logic.teamLabel(t)) + "</div>" +
-      '<div class="when">' + esc(countdown(next, now)) + "</div>" +
+      '<div class="when">' + liveCountdown(next, now) + "</div>" +
       '<div class="what">' + esc(Logic.matchTitle(next)) + "</div>" +
       '<div class="where">' + esc(Logic.dayLabel(next.data)) + " · " + esc(next.ora) + (next.sede ? " · " + esc(next.sede) : "") + "</div>" +
-      '<span class="pill">' + (next.casa ? "In casa" : "In trasferta") + (next.ritrovo ? " · ritrovo " + esc(next.ritrovo) : "") + "</span></div>";
+      '<span class="pill">' + (next.casa ? "In casa" : "In trasferta") + (next.ritrovo ? " · ritrovo " + esc(next.ritrovo) : "") + "</span>" +
+      progress(next, now) + "</div>";
   }
+
+  // Sotto le 24 ore: conto alla rovescia in ore e minuti.
+  function liveCountdown(g, now) {
+    var ms = Logic.toDate(g.data, g.ora) - now;
+    if (ms > 24 * 3600000) return esc(countdown(g, now));
+    var h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
+    return '<span class="live-wrap"><span class="live"></span>Mancano ' + (h ? h + " h " : "") + m + " min</span>";
+  }
+
+  // Barra che si riempie nelle 24 ore prima del ritrovo (o della gara).
+  function progress(g, now) {
+    var target = Logic.toDate(g.data, g.ritrovo || g.ora).getTime();
+    var left = target - now.getTime();
+    if (left > 24 * 3600000) return "";
+    var pct = left <= 0 ? 100 : 100 - left / (24 * 3600000) * 100;
+    var lbl = left <= 0 ? (g.ritrovo ? "È ora del ritrovo" : "Si gioca!") :
+      (g.ritrovo ? "Al ritrovo delle " + g.ritrovo : "All'inizio");
+    return '<div class="prog"><i style="width:' + pct.toFixed(1) + '%"></i></div><div class="prog-l">' + esc(lbl) + "</div>";
+  }
+  setInterval(function () { if (ui.view === "partite" && !document.hidden) renderHero(); }, 30000);
 
   function renderList() {
     renderHero();
@@ -294,9 +340,9 @@
     var el = $("list");
     var groups = dayGroups(games);
     if (!groups.length) { el.innerHTML = '<p class="empty">Nessuna partita per i filtri scelti.</p>'; return; }
-    el.innerHTML = groups.map(function (d) {
+    el.innerHTML = groups.map(function (d, i) {
       var f = dayFlag(d.partite);
-      return '<div class="day"><div class="day-h">' + esc(Logic.dayLabel(d.data)) +
+      return '<div class="day stag" style="--i:' + Math.min(i, 12) + '"><div class="day-h">' + esc(Logic.dayLabel(d.data)) +
         (f ? ' <span class="flag">' + f + " gare</span>" : "") + "</div>" +
         d.partite.map(function (g) { return gameCard(g, now); }).join("") + "</div>";
     }).join("");
@@ -327,7 +373,9 @@
       });
     });
     $("cal-grid").innerHTML = html;
-    $("cal-grid").classList.remove("anim"); void $("cal-grid").offsetWidth; $("cal-grid").classList.add("anim");
+    var cg = $("cal-grid");
+    cg.classList.remove("anim", "from-right", "from-left"); void cg.offsetWidth;
+    cg.classList.add(ui.calDir || "anim"); ui.calDir = null;
     document.querySelectorAll("#cal-grid .c").forEach(function (b) {
       b.addEventListener("click", function () {
         ui.selDay = b.dataset.day;
@@ -348,12 +396,14 @@
     bindCards(el);
   }
 
-  $("m-prev").addEventListener("click", function () {
-    var d = new Date(ui.month.y, ui.month.m - 1, 1); ui.month = { y: d.getFullYear(), m: d.getMonth() }; renderCalendar();
-  });
-  $("m-next").addEventListener("click", function () {
-    var d = new Date(ui.month.y, ui.month.m + 1, 1); ui.month = { y: d.getFullYear(), m: d.getMonth() }; renderCalendar();
-  });
+  function shiftMonth(k) {
+    var d = new Date(ui.month.y, ui.month.m + k, 1); ui.month = { y: d.getFullYear(), m: d.getMonth() };
+    ui.calDir = k > 0 ? "from-right" : "from-left";
+    renderCalendar();
+  }
+  $("m-prev").addEventListener("click", function () { shiftMonth(-1); });
+  $("m-next").addEventListener("click", function () { shiftMonth(1); });
+  FX.swipe($("cal-grid"), function () { shiftMonth(1); }, function () { shiftMonth(-1); });
 
   // ---------- Incroci ----------
   function incBlock(list) {
@@ -510,7 +560,7 @@
 
   $("btn-add").addEventListener("click", function () { openEditor(null); });
   $("ed-cancel").addEventListener("click", closeEditor);
-  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); });
+  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); closeImage(); });
 
   $("ed-save").addEventListener("click", function () {
     var cur = ui.editId ? findGame(ui.editId) : null;
@@ -690,11 +740,41 @@
       var parz = Logic.parseParziali($("rs-parz").value);
       edits.ris[resId] = { casa: +c, ospite: +o, parziali: parz, fonte: "Inserito da te" };
     }
+    var gid = resId;
     closeResult();
     saveEdits();
+    FX.vibrate(18);
+    var gg = findGame(gid);
+    if (gg && Logic.esito(gg, TM[gg.team]) === "vinta") FX.confetti(TM[gg.team].club);
   });
   $("rs-clear").addEventListener("click", function () { delete edits.ris[resId]; closeResult(); saveEdits(); });
   $("rs-close").addEventListener("click", closeResult);
+
+  // ---------- Grafica per WhatsApp ----------
+  var imgData = "", imgName = "";
+  function openImage(id) {
+    var g = findGame(id), t = TM[g.team];
+    var post = !!Logic.esito(g, t);
+    var top = (g.tabellino || []).filter(function (r) { return r.p !== null && r.p !== undefined && r.p > 0; })
+      .sort(function (a, b) { return b.p - a.p; }).slice(0, 3);
+    var gd = Logic.dayLabel(g.data);
+    $("img-title").textContent = post ? "Grafica del risultato" : "Grafica della partita";
+    $("img-prev").removeAttribute("src");
+    $("img-sheet").classList.add("open");
+    $("sheet-bg").classList.add("open");
+    FX.cardImage({
+      tipo: post ? "post" : "pre", club: t.club, squadra: Logic.teamLabel(t), campionato: t.campionato,
+      giorno: gd.charAt(0).toUpperCase() + gd.slice(1), ora: g.ora, casa: g.casa, casaNome: g.squadraCasa, ospiteNome: g.squadraOspite,
+      ritrovo: g.ritrovo, luogoRitrovo: g.luogoRitrovo, sede: g.sede, ris: g.risultato, marcatori: top
+    }, function (url) {
+      imgData = url;
+      imgName = (post ? "risultato-" : "partita-") + g.id + ".png";
+      $("img-prev").src = url;
+    });
+  }
+  function closeImage() { $("img-sheet").classList.remove("open"); $("sheet-bg").classList.remove("open"); }
+  $("img-close").addEventListener("click", closeImage);
+  $("img-share").addEventListener("click", function () { if (imgData) { FX.vibrate(12); FX.shareImage(imgData, imgName); } });
 
   // ---------- Condivisione ----------
   function shareOut(text) {
@@ -752,12 +832,13 @@
     var list = withRes.length ? withRes : teams.filter(function (t) { return t.id === statsTeam; });
     if (!list.some(function (t) { return t.id === statsTeam; }) && list.length) statsTeam = list[0].id;
     $("stats-team").innerHTML = list.map(function (t) {
-      return '<button data-st="' + t.id + '"' + (t.id === statsTeam ? ' class="on"' : "") + ">" + esc(t.nome) + (t.club === "LIONS" ? " L" : "") + "</button>";
+      return '<button data-st="' + t.id + '"' + (t.id === statsTeam ? ' class="on"' : "") + ">" + esc(t.nome.replace("Under ", "U")) + " " + (t.club === "LIONS" ? "LIONS" : "BD") + "</button>";
     }).join("");
     $("stats-team").querySelectorAll("button").forEach(function (b) {
       b.addEventListener("click", function () { statsTeam = b.dataset.st; renderStats(); });
     });
     var st = Logic.stats(DATA, statsTeam), t = TM[statsTeam];
+    document.getElementById("view-stats").style.setProperty("--accent", t.club === "LIONS" ? "var(--lions)" : "var(--bulldogs)");
     if (!st.giocate && !st.giocatori.length) {
       $("stats").innerHTML = '<p class="empty">Nessun risultato inserito per ' + esc(Logic.teamLabel(t)) + '. Aggiungili da una partita con «Risultato e referto».</p>';
       return;
@@ -769,6 +850,11 @@
       '<div class="kpis"><div class="kpi"><b>' + st.vinte + "–" + st.perse + (st.pari ? "–" + st.pari : "") + "</b><span>Vinte–perse</span></div>" +
       '<div class="kpi" style="animation-delay:60ms"><b>' + f1(st.mediaFatti) + "</b><span>Punti fatti (media)</span></div>" +
       '<div class="kpi" style="animation-delay:120ms"><b>' + f1(st.mediaSubiti) + "</b><span>Punti subiti (media)</span></div></div>" +
+      (st.partite.length ? "<h2>Ultime partite</h2>" + '<div class="form-row">' + st.partite.slice(-5).map(function (r, i) {
+        return '<span class="fdot ' + r.esito + '" style="animation-delay:' + (i * 60) + 'ms">' + { vinta: "V", persa: "P", pari: "=" }[r.esito] + "</span>";
+      }).join("") + "</div>" : "") +
+      trendChart(st) +
+      scorerCards(st) +
       (st.quarti.length ? "<h2>Media per quarto</h2>" + '<div class="card bars">' + st.quarti.map(function (q, i) {
         return '<div class="q"><div>' + esc(q.periodo) + '</div><div class="track">' +
           '<div class="bar f" style="width:' + (q.fatti / max * 100) + "%;animation-delay:" + (i * 70) + 'ms"></div>' +
@@ -786,6 +872,44 @@
           esc(Logic.dayLabel(r.g.data)) + "</div></div>" +
           '<div class="e ' + (r.esito === "vinta" ? "ok" : r.esito === "persa" ? "ko" : "") + '">' + r.fatti + "–" + r.subiti + "</div></div>";
       }).join("");
+  }
+
+  // Andamento del punteggio quarto per quarto nell'ultima gara con parziali.
+  function trendChart(st) {
+    var last = st.partite.filter(function (r) { return r.g.risultato.parziali && r.g.risultato.parziali.length; }).slice(-1)[0];
+    if (!last) return "";
+    var g = last.g, mineCasa = g.squadraCasa === TM[g.team].club;
+    var a = [0], b = [0];
+    g.risultato.parziali.forEach(function (p) {
+      a.push(a[a.length - 1] + (mineCasa ? p[0] : p[1]));
+      b.push(b[b.length - 1] + (mineCasa ? p[1] : p[0]));
+    });
+    var W = 320, H = 150, P = 24, max = Math.max(a[a.length - 1], b[b.length - 1], 1), n = a.length - 1;
+    var pt = function (arr) {
+      return arr.map(function (v, i) { return (P + i * (W - 2 * P) / n).toFixed(1) + "," + (H - P - v / max * (H - 2 * P)).toFixed(1); }).join(" ");
+    };
+    var lab = a.map(function (v, i) {
+      return i ? '<text class="lbl" x="' + (P + i * (W - 2 * P) / n) + '" y="' + (H - 6) + '" text-anchor="middle">' + i + "°</text>" : "";
+    }).join("");
+    var opp = mineCasa ? g.squadraOspite : g.squadraCasa;
+    return "<h2>Andamento · " + esc(Logic.matchTitle(g)) + "</h2>" +
+      '<div class="card trend"><svg viewBox="0 0 ' + W + " " + H + '">' +
+      '<polyline class="ln" style="stroke:var(--accent)" points="' + pt(a) + '"/>' +
+      '<polyline class="ln" style="stroke:var(--muted);animation-delay:.15s" points="' + pt(b) + '"/>' + lab +
+      '<text class="lbl" x="' + (W - P) + '" y="' + (H - P - a[n] / max * (H - 2 * P) - 6) + '" text-anchor="end">' + a[n] + "</text>" +
+      '<text class="lbl" x="' + (W - P) + '" y="' + (H - P - b[n] / max * (H - 2 * P) - 6) + '" text-anchor="end">' + b[n] + "</text></svg>" +
+      '<div class="legend"><span class="dot" style="background:var(--accent)"></span> ' + esc(TM[g.team].club) +
+      ' <span class="dot"></span> ' + esc(opp) + "</div></div>";
+  }
+
+  function scorerCards(st) {
+    var top = st.giocatori.filter(function (x) { return x.partitePunti && x.punti > 0; }).slice(0, 3);
+    if (!top.length) return "";
+    var f1 = function (x) { return (Math.round(x * 10) / 10).toString().replace(".", ","); };
+    return "<h2>Migliori marcatori</h2>" + '<div class="scorers">' + top.map(function (x, i) {
+      return '<div class="scorer' + (i ? "" : " first") + '" style="animation-delay:' + (i * 80) + 'ms"><div class="num">#' + esc(x.n) + "</div>" +
+        '<div class="pts"><b>' + x.punti + "</b> punti · " + f1(x.punti / x.partitePunti) + " a gara</div></div>";
+    }).join("") + "</div>";
   }
 
   // ---------- Ritrovo e pause ----------
@@ -833,6 +957,20 @@
     settings.pause.sort(function (a, b) { return a.dal < b.dal ? -1 : 1; });
     $("pz-dal").value = ""; $("pz-al").value = ""; $("pz-nome").value = "";
     saveSettings(); renderAll(); renderPause(); sync(true);
+  });
+
+  // ---------- Icona dell'app ----------
+  function renderIcon() {
+    var cur = A && A.getIcon ? A.getIcon() : "ball";
+    document.querySelectorAll("#icon-pick button").forEach(function (b) { b.classList.toggle("on", b.dataset.icon === cur); });
+  }
+  document.querySelectorAll("#icon-pick button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (!A || !A.setIcon) return;
+      A.setIcon(b.dataset.icon);
+      FX.vibrate(15);
+      renderIcon();
+    });
   });
 
   // ---------- Impostazioni ----------
@@ -1026,7 +1164,8 @@
 
   rebuild();
   renderVersion();
-  renderChips(); renderAll(); renderPromemoria(); renderRitrovo(); renderPause();
+  renderChips(); renderAll(); renderPromemoria(); renderRitrovo(); renderPause(); renderIcon(); applyClubTheme();
+  FX.splash();
   renderNotifStatus(); renderCalSettings();
   reschedule();
   sync(true); // dopo un aggiornamento dell'app porta i nuovi dati nel calendario

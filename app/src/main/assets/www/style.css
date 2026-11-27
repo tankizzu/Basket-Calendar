@@ -212,3 +212,69 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .ptab th{font-size:11px;color:var(--muted);font-weight:600;text-align:center;padding:6px 4px;border-bottom:1px solid var(--line)}
 .ptab td{text-align:center;padding:7px 4px;border-bottom:1px solid var(--line)}
 .ptab tr:last-child td{border-bottom:0}
+
+/* Avvio */
+#splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .35s,transform .35s var(--ease)}
+#splash.out{opacity:0;transform:scale(1.04);pointer-events:none}
+.sp-ball{width:64px;height:64px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffb067,#e8772e 60%,#b6531a);box-shadow:inset 0 0 0 3px rgba(0,0,0,.2);animation:bounce .62s cubic-bezier(.3,0,.7,1) infinite alternate}
+.sp-shadow{width:52px;height:10px;border-radius:50%;background:rgba(0,0,0,.18);margin-top:6px;animation:shadow .62s cubic-bezier(.3,0,.7,1) infinite alternate}
+.sp-name{margin-top:22px;font-weight:800;letter-spacing:-.01em;font-size:18px;color:var(--ink);opacity:.8}
+@keyframes bounce{from{transform:translateY(-70px)}to{transform:translateY(0) scaleY(.92)}}
+@keyframes shadow{from{transform:scale(.55);opacity:.4}to{transform:scale(1);opacity:1}}
+.confetti{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:90}
+
+/* Elenco a cascata e cambio scheda direzionale */
+.stag{animation:viewIn .32s var(--ease) both;animation-delay:calc(var(--i,0) * 28ms)}
+.view.active.from-right{animation:slideL var(--med) var(--ease)}
+.view.active.from-left{animation:slideR var(--med) var(--ease)}
+@keyframes slideL{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes slideR{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+.cal.from-right{animation:slideL var(--med) var(--ease)}
+.cal.from-left{animation:slideR var(--med) var(--ease)}
+
+/* Conto alla rovescia */
+.hero .prog{position:relative;z-index:1;height:6px;border-radius:3px;background:rgba(255,255,255,.18);margin-top:12px;overflow:hidden}
+.hero .prog i{display:block;height:100%;border-radius:3px;background:var(--hero-acc,#fff);transition:width .6s var(--ease)}
+.hero .prog-l{position:relative;z-index:1;font-size:11px;opacity:.7;margin-top:4px}
+.hero.Bulldogs{--hero-acc:#f2c500}.hero.LIONS{--hero-acc:#c9955f}
+.hero .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff5a4a;margin-right:6px;animation:pulse 1.4s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,90,74,.6)}100%{box-shadow:0 0 0 10px rgba(255,90,74,0)}}
+
+/* Grafica */
+.img-prev{width:100%;border-radius:14px;display:block;margin-bottom:12px;box-shadow:var(--shadow);background:var(--soft);aspect-ratio:4/5}
+
+/* Statistiche visive */
+.form-row{display:flex;gap:6px;align-items:center;margin:6px 0 2px}
+.fdot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;animation:pop .4s var(--ease) both}
+.fdot.vinta{background:var(--ok)}.fdot.persa{background:var(--warn)}.fdot.pari{background:var(--muted)}
+.scorers{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.scorer{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 8px;text-align:center;box-shadow:var(--shadow);animation:viewIn .4s var(--ease) both}
+.scorer .num{font-size:30px;font-weight:900;letter-spacing:-.03em;color:var(--accent,var(--ink))}
+.scorer .pts{font-size:13px;color:var(--muted)}
+.scorer.first{border-color:var(--accent,var(--ink));box-shadow:0 0 0 1px var(--accent,var(--ink)),var(--shadow)}
+.trend svg{width:100%;height:auto;display:block}
+.trend .ln{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:600;stroke-dashoffset:600;animation:draw 1s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.trend .lbl{font-size:11px;fill:var(--muted)}
+
+/* Tema per club */
+.club-logo{display:none;width:26px;height:26px;border-radius:50%}
+body[data-club] .ball{display:none}
+body[data-club] .club-logo{display:block;animation:pop .4s var(--ease)}
+body[data-club=Bulldogs]{--accent:var(--bulldogs)}
+body[data-club=LIONS]{--accent:var(--lions)}
+body[data-club] .top{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 16%,var(--bg)),color-mix(in srgb,var(--bg) 88%,transparent))}
+body[data-club] .btn:not(.ghost):not(.danger){background:var(--accent);color:#fff}
+body[data-club] .tabs button.on{color:var(--accent)}
+body[data-club] .tabs button.on svg{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+body[data-club] .seg button.on{color:var(--accent)}
+body,.top,.btn,.tabs button{transition:background .35s var(--ease),color .35s var(--ease)}
+
+/* Scelta icona */
+.icon-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.icon-pick button{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;font-weight:600;transition:transform var(--fast) var(--ease),border-color var(--fast)}
+.icon-pick button:active{transform:scale(.96)}
+.icon-pick button.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.icon-pick img,.icon-pick .ic{width:48px;height:48px;border-radius:12px;background:#fff;object-fit:contain}
+.icon-pick .ic-ball{background:#1f4fd1 radial-gradient(circle at 50% 50%,#ffb067 0,#e8772e 34%,transparent 35%)}
+.hero .live-wrap{font-size:22px;white-space:nowrap}
