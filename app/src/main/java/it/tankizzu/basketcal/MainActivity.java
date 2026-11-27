@@ -86,6 +86,10 @@ public class MainActivity extends Activity {
         }).start();
     }
 
+    // Il WebView di stampa deve restare vivo finché la stampa non è pronta.
+    private android.webkit.WebView printView;
+    void keepPrintView(android.webkit.WebView v) { printView = v; }
+
     void runJs(String js) {
         runOnUiThread(() -> { if (web != null) web.evaluateJavascript(js, null); });
     }

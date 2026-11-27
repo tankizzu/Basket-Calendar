@@ -106,6 +106,86 @@ var Logic = (function () {
     return out;
   }
 
+  // ---------- Tabellino dal vivo ----------
+  // live = { q: 1, ev: [{t:"p", n, v, q} | {t:"f", n, q} | {t:"o", v, q}] }  (p = punti nostri, f = fallo nostro, o = punti avversari)
+  function liveState(live) {
+    var st = { noi: 0, loro: 0, q: live.q || 1, quarti: [], giocatori: {}, falliSquadra: {} };
+    (live.ev || []).forEach(function (e) {
+      var i = e.q - 1;
+      st.quarti[i] = st.quarti[i] || [0, 0];
+      if (e.t === "p") {
+        st.noi += e.v; st.quarti[i][0] += e.v;
+        var x = st.giocatori[e.n] = st.giocatori[e.n] || { n: e.n, p: 0, f: 0 };
+        x.p += e.v;
+      } else if (e.t === "o") {
+        st.loro += e.v; st.quarti[i][1] += e.v;
+      } else if (e.t === "f") {
+        var y = st.giocatori[e.n] = st.giocatori[e.n] || { n: e.n, p: 0, f: 0 };
+        y.f++;
+        st.falliSquadra[e.q] = (st.falliSquadra[e.q] || 0) + 1;
+      }
+    });
+    for (var k = 0; k < st.q; k++) st.quarti[k] = st.quarti[k] || [0, 0];
+    return st;
+  }
+
+  // Converte la partita dal vivo in risultato (casa/ospite) e tabellino.
+  function liveResult(live, g, t) {
+    var st = liveState(live);
+    var mineCasa = g.squadraCasa === t.club;
+    return {
+      ris: {
+        casa: mineCasa ? st.noi : st.loro, ospite: mineCasa ? st.loro : st.noi,
+        parziali: st.quarti.map(function (p) { return mineCasa ? [p[0], p[1]] : [p[1], p[0]]; }),
+        fonte: "Tabellino dal vivo"
+      },
+      tab: Object.keys(st.giocatori).map(function (k) { return st.giocatori[k]; })
+        .sort(function (a, b) { return a.n - b.n; }).map(function (x) { return { n: +x.n, p: x.p, f: x.f }; })
+    };
+  }
+
+  // Testo di riepilogo post-partita (senza nomi).
+  function recap(g, t) {
+    var e = esito(g, t);
+    if (!e) return "";
+    var r = g.risultato, mineCasa = g.squadraCasa === t.club;
+    var noi = mineCasa ? r.casa : r.ospite, loro = mineCasa ? r.ospite : r.casa;
+    var opp = mineCasa ? g.squadraOspite : g.squadraCasa;
+    var lines = ["🏀 *" + teamLabel(t) + "* · " + cap(dayLabel(g.data))];
+    lines.push((e === "vinta" ? "✅ Vittoria" : e === "persa" ? "❌ Sconfitta" : "🤝 Pareggio") + " " +
+      (g.casa ? "in casa" : "in trasferta") + " contro " + opp + ": *" + noi + "–" + loro + "*");
+    if (r.parziali && r.parziali.length) {
+      var q = r.parziali.map(function (p) { return mineCasa ? p : [p[1], p[0]]; });
+      lines.push("📊 Parziali: " + q.map(function (p) { return p[0] + "-" + p[1]; }).join(", "));
+      var best = 0;
+      q.forEach(function (p, i) { if (p[0] - p[1] > q[best][0] - q[best][1]) best = i; });
+      var d = q[best][0] - q[best][1];
+      if (q.length > 1) lines.push("🔥 Miglior quarto: il " + (best + 1) + "° (" + q[best][0] + "-" + q[best][1] + (d > 0 ? ", +" + d : d < 0 ? ", " + d : "") + ")");
+    }
+    var tab = (g.tabellino || []).filter(function (x) { return x.p !== null && x.p !== undefined; });
+    if (tab.length) {
+      var top = tab.slice().sort(function (a, b) { return b.p - a.p; });
+      if (top[0].p > 0) lines.push("⭐ Miglior marcatore: #" + top[0].n + " con " + top[0].p + " punti");
+      var segn = tab.filter(function (x) { return x.p > 0; }).length;
+      lines.push("👥 A segno " + segn + " giocator" + (segn === 1 ? "e" : "i"));
+    }
+    return lines.join("\n");
+  }
+
+  // Presenze agli allenamenti per numero di maglia.
+  function attendance(data, teamId) {
+    var tr = data.partite.filter(function (g) { return g.team === teamId && isTraining(g) && g.presenti; });
+    var per = {};
+    tr.forEach(function (g) {
+      g.presenti.forEach(function (n) { per[n] = (per[n] || 0) + 1; });
+    });
+    return {
+      sedute: tr.length,
+      giocatori: Object.keys(per).map(function (n) { return { n: +n, presenze: per[n], perc: tr.length ? per[n] / tr.length : 0 }; })
+        .sort(function (a, b) { return b.presenze - a.presenze || a.n - b.n; })
+    };
+  }
+
   function minutes(hhmm) { var p = hhmm.split(":").map(Number); return p[0] * 60 + p[1]; }
 
   // Allenamenti che si sovrappongono a una gara nello stesso giorno (gara considerata di 2 ore).
@@ -314,6 +394,7 @@ var Logic = (function () {
         if (m.note !== undefined) g.noteUtente = m.note;
         if (m.ritrovo !== undefined) g.ritrovoUtente = m.ritrovo;
         if (m.luogoRitrovo !== undefined) g.luogoRitrovoUtente = m.luogoRitrovo;
+        if (m.passaggi !== undefined) g.passaggi = m.passaggi;
         if (!g0.aggiunta) {
           g.verifica = "utente";
           g.modificata = m.quando || "";
@@ -321,6 +402,8 @@ var Logic = (function () {
       }
       if (edits.ris && edits.ris[g.id]) g.risultato = edits.ris[g.id];
       g.foto = (edits.foto && edits.foto[g.id]) || [];
+      if (edits.pres && edits.pres[g.id]) g.presenti = edits.pres[g.id];
+      if (edits.live && edits.live[g.id] && !edits.live[g.id].chiusa) g.inCorso = true;
       if (edits.tab && edits.tab[g.id] && edits.tab[g.id].length) g.tabellino = edits.tab[g.id];
       if (!g.sede && g.casa && sedeCasa[g.team]) { g.sede = sedeCasa[g.team]; g.sedeDaImpostazioni = true; }
       out.push(g);
@@ -471,6 +554,7 @@ var Logic = (function () {
       lines.push("🕐 Ritrovo ore " + g.ritrovo + (g.luogoRitrovo ? " · " + g.luogoRitrovo : ""));
     }
     lines.push("📍 " + (g.sede || "Sede da definire"));
+    if (g.passaggi && !isTraining(g) && g.stato !== "annullata") lines.push("🚗 Passaggi: " + g.passaggi);
     if (g.stato === "recupero") lines.push("🔁 Recupero");
     if (g.risultato && esito(g, t)) {
       lines.push("🏁 " + scoreLine(g));
@@ -487,7 +571,7 @@ var Logic = (function () {
   }
 
   return {
-    applyEdits: applyEdits, stats: stats, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
+    applyEdits: applyEdits, liveState: liveState, liveResult: liveResult, recap: recap, attendance: attendance, stats: stats, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
     teamMap: teamMap, toDate: toDate, dayLabel: dayLabel, shortDate: shortDate, teamLabel: teamLabel,
     isActive: isActive, isPast: isPast, overlaps: overlaps, checkU15Weekend: checkU15Weekend,
     matchTitle: matchTitle, buildReminders: buildReminders, buildCalendarEvents: buildCalendarEvents,

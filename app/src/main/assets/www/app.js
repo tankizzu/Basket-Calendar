@@ -40,7 +40,7 @@
 
   var settings = Logic.mergeSettings(BASE, loadJSON("settings"));
   var edits = loadJSON("edits") || {};
-  ["mod", "ris", "foto", "tab"].forEach(function (k) { edits[k] = edits[k] || {}; });
+  ["mod", "ris", "foto", "tab", "pres", "live"].forEach(function (k) { edits[k] = edits[k] || {}; });
   ["add", "del"].forEach(function (k) { edits[k] = edits[k] || []; });
   var DATA;
   var now0 = new Date();
@@ -215,6 +215,8 @@
     var es = Logic.esito(g, TM[g.team]);
     if (es) b.push('<span class="badge esito ' + es + '">' + { vinta: "Vinta", persa: "Persa", pari: "Pari" }[es] + "</span>");
     if (g.foto && g.foto.length) b.push('<span class="badge">Referto 📷</span>');
+    if (g.inCorso) b.push('<span class="badge livebadge">● In corso</span>');
+    if (g.presenti) b.push('<span class="badge casa">' + g.presenti.length + " presenti</span>");
     if (g.aggiunta) b.push('<span class="badge mod">Aggiunta da te</span>');
     else if (g.modificata !== undefined) b.push('<span class="badge mod">Modificata da te</span>');
     if (g.verifica === "utente" && !g.aggiunta) b.push('<span class="badge utente">Da confermare</span>');
@@ -246,6 +248,9 @@
       '<button class="btn ghost" data-act="share" data-id="' + g.id + '">Condividi</button>' +
       (Logic.isTraining(g) ? "" : '<button class="btn ghost" data-act="result" data-id="' + g.id + '">Risultato e referto</button>') +
       (Logic.isTraining(g) || g.stato === "annullata" ? "" : '<button class="btn ghost" data-act="img" data-id="' + g.id + '">Grafica</button>') +
+      (Logic.isTraining(g) || g.stato === "annullata" ? "" : '<button class="btn ghost" data-act="live" data-id="' + g.id + '">' + (g.inCorso ? "Riprendi dal vivo" : "Dal vivo") + "</button>") +
+      (Logic.esito(g, t) ? '<button class="btn ghost" data-act="recap" data-id="' + g.id + '">Riepilogo</button>' : "") +
+      (Logic.isTraining(g) && g.stato !== "annullata" ? '<button class="btn ghost" data-act="pres" data-id="' + g.id + '">Presenze</button>' : "") +
       '<button class="btn ghost" data-act="edit" data-id="' + g.id + '">Modifica</button>' +
       '<button class="btn ghost" data-act="toggle" data-id="' + g.id + '">' + (g.stato === "annullata" ? "Ripristina gara" : "Segna annullata") + "</button>" +
       "</div>";
@@ -279,6 +284,9 @@
         if (b.dataset.act === "edit") openEditor(g.id);
         if (b.dataset.act === "result") openResult(g.id);
         if (b.dataset.act === "img") openImage(g.id);
+        if (b.dataset.act === "live") openLive(g.id);
+        if (b.dataset.act === "recap") openRecap(g.id);
+        if (b.dataset.act === "pres") openPres(g.id);
         if (b.dataset.act === "share") shareOut(Logic.shareText(g, TM[g.team]));
         if (b.dataset.act === "toggle") {
           setMod(g.id, { stato: g.stato === "annullata" ? baseStato(g.id) : "annullata" });
@@ -558,6 +566,7 @@
       $("ed-note").value = "";
       $("ed-rit").value = "";
       $("ed-lrit").value = "";
+      $("ed-pass").value = "";
     } else {
       var g = findGame(id);
       $("ed-data").value = g.data;
@@ -571,6 +580,7 @@
       $("ed-note").value = g.noteUtente || "";
       $("ed-rit").value = g.ritrovoUtente || "";
       $("ed-lrit").value = g.luogoRitrovoUtente || "";
+      $("ed-pass").value = g.passaggi || "";
       $("ed-rit").placeholder = g.ritrovo || "";
     }
     $("sheet").classList.add("open");
@@ -579,6 +589,7 @@
 
   function setTrainingMode(on) {
     $("ed-rit-wrap").style.display = on ? "none" : "";
+    $("ed-pass-wrap").style.display = on ? "none" : "";
     $("ed-fine-wrap").style.display = on ? "" : "none";
     $("ed-casa-wrap").style.display = on ? "none" : "";
     $("ed-avv-wrap").style.display = on ? "none" : "";
@@ -593,7 +604,7 @@
 
   $("btn-add").addEventListener("click", function () { openEditor(null); });
   $("ed-cancel").addEventListener("click", closeEditor);
-  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); closeImage(); });
+  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); closeImage(); closeRecap(); closePres(); });
 
   $("ed-save").addEventListener("click", function () {
     var cur = ui.editId ? findGame(ui.editId) : null;
@@ -627,6 +638,8 @@
       var rit = $("ed-rit").value, lrit = $("ed-lrit").value.trim();
       if (!tr && rit !== (g.ritrovoUtente || "")) ch.ritrovo = rit;
       if (!tr && lrit !== (g.luogoRitrovoUtente || "")) ch.luogoRitrovo = lrit;
+      var pas = $("ed-pass").value.trim();
+      if (!tr && pas !== (g.passaggi || "")) ch.passaggi = pas;
       if (Object.keys(ch).length) setMod(ui.editId, ch);
     }
     closeEditor();
@@ -783,6 +796,235 @@
   $("rs-clear").addEventListener("click", function () { delete edits.ris[resId]; closeResult(); saveEdits(); });
   $("rs-close").addEventListener("click", closeResult);
 
+  // ---------- Partita dal vivo ----------
+  var liveId = null, liveAct = null;
+
+  function roster(teamId) {
+    var set = {};
+    DATA.partite.forEach(function (g) {
+      if (g.team === teamId && g.tabellino) g.tabellino.forEach(function (r) { set[r.n] = 1; });
+    });
+    Object.keys(edits.live).forEach(function (id) {
+      var gm = findGame(id);
+      if (gm && gm.team === teamId) (edits.live[id].ev || []).forEach(function (e) { if (e.n !== undefined) set[e.n] = 1; });
+      if (gm && gm.team === teamId) (edits.live[id].extra || []).forEach(function (n) { set[n] = 1; });
+    });
+    return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+  }
+
+  function openLive(id) {
+    liveId = id; liveAct = null;
+    var g = findGame(id), t = TM[g.team];
+    if (!edits.live[id] || edits.live[id].chiusa) edits.live[id] = { q: 1, ev: [], extra: [] };
+    storeJSON("edits", edits);
+    $("lv-title").textContent = Logic.teamLabel(t) + " · " + Logic.dayLabel(g.data);
+    $("lv-noi-n").textContent = t.club;
+    $("lv-loro-n").textContent = g.casa ? g.squadraOspite : g.squadraCasa;
+    document.querySelector(".lv-score").className = "lv-score " + t.club;
+    $("live").classList.add("open");
+    renderLive();
+  }
+
+  function liveSave() {
+    storeJSON("edits", edits);
+    var g = findGame(liveId), t = TM[g.team], st = Logic.liveState(edits.live[liveId]);
+    if (A && A.liveNotify) {
+      try { A.liveNotify(t.club + " " + st.noi + " – " + st.loro + " " + (g.casa ? g.squadraOspite : g.squadraCasa), (st.q > 4 ? "Supplementare" : st.q + "° quarto") + " · " + Logic.teamLabel(t)); } catch (e) {}
+    }
+  }
+
+  function renderLive(bump) {
+    var L = edits.live[liveId], st = Logic.liveState(L);
+    $("lv-noi").textContent = st.noi; $("lv-loro").textContent = st.loro;
+    if (bump) { var el = $(bump); el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+    $("lv-qs").innerHTML = [1, 2, 3, 4, 5].map(function (q) {
+      return '<button data-q="' + q + '"' + (q === L.q ? ' class="on"' : "") + ">" + (q < 5 ? q + "°" : "S") + "</button>";
+    }).join("");
+    $("lv-qs").querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () { L.q = +b.dataset.q; liveSave(); renderLive(); });
+    });
+    var tf = st.falliSquadra[L.q] || 0;
+    $("lv-tf").textContent = "Falli di squadra nel quarto: " + tf + (tf >= 4 ? " · dal prossimo tiri liberi" : "");
+    $("lv-tf").classList.toggle("bonus", tf >= 4);
+    document.querySelectorAll("#lv-actions button").forEach(function (b) { b.classList.toggle("on", b.dataset.a === liveAct); });
+    $("lv-grid").classList.toggle("armed", !!liveAct);
+    $("lv-hint").textContent = liveAct ? "Ora tocca il numero di maglia." : "Scegli l'azione, poi il numero di maglia.";
+    var g = findGame(liveId);
+    var nums = roster(g.team);
+    $("lv-grid").innerHTML = nums.map(function (n) {
+      var x = st.giocatori[n] || { p: 0, f: 0 };
+      return '<button data-n="' + n + '" class="' + (x.f >= 5 ? "f5" : x.f >= 4 ? "f4" : "") + '"><b>' + n + "</b><small>" + x.p + " pt · " + x.f + " f</small></button>";
+    }).join("") || '<p class="empty" style="grid-column:1/-1">Aggiungi i numeri di maglia qui sotto.</p>';
+    $("lv-grid").querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        if (!liveAct) { $("lv-hint").textContent = "Prima scegli l'azione: +1, +2, +3 o Fallo."; FX.vibrate(40); return; }
+        var n = +b.dataset.n;
+        if (liveAct === "f") L.ev.push({ t: "f", n: n, q: L.q });
+        else L.ev.push({ t: "p", n: n, v: +liveAct.slice(1), q: L.q });
+        var after = Logic.liveState(L).giocatori[n];
+        FX.vibrate(liveAct === "f" ? 25 : 12);
+        var wasPts = liveAct !== "f";
+        liveAct = null;
+        liveSave();
+        renderLive(wasPts ? "lv-noi" : null);
+        if (after && after.f === 4) $("lv-hint").textContent = "Attenzione: il n. " + n + " ha 4 falli.";
+        if (after && after.f >= 5) $("lv-hint").textContent = "Il n. " + n + " è uscito per 5 falli.";
+      });
+    });
+    var log = L.ev.slice(-5).reverse().map(function (e) {
+      var q = (e.q < 5 ? e.q + "°" : "S");
+      if (e.t === "p") return "<div>" + q + " · #" + e.n + " +" + e.v + "</div>";
+      if (e.t === "f") return "<div>" + q + " · #" + e.n + " fallo</div>";
+      return "<div>" + q + " · avversari +" + e.v + "</div>";
+    });
+    $("lv-log").innerHTML = log.join("") || '<div>Nessuna azione registrata.</div>';
+  }
+
+  document.querySelectorAll("#lv-actions button").forEach(function (b) {
+    b.addEventListener("click", function () { liveAct = liveAct === b.dataset.a ? null : b.dataset.a; FX.vibrate(8); renderLive(); });
+  });
+  document.querySelectorAll(".lv-opp button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var L = edits.live[liveId]; L.ev.push({ t: "o", v: +b.dataset.o, q: L.q });
+      FX.vibrate(12); liveSave(); renderLive("lv-loro");
+    });
+  });
+  $("lv-undo").addEventListener("click", function () {
+    var L = edits.live[liveId]; if (!L.ev.length) return;
+    L.ev.pop(); FX.vibrate(20); liveSave(); renderLive();
+  });
+  $("lv-addnum").addEventListener("click", function () {
+    var v = $("lv-newnum").value; if (v === "") return;
+    var L = edits.live[liveId]; L.extra = L.extra || [];
+    if (L.extra.indexOf(+v) < 0) L.extra.push(+v);
+    $("lv-newnum").value = ""; liveSave(); renderLive();
+  });
+  $("lv-close").addEventListener("click", function () {
+    $("live").classList.remove("open");
+    rebuild(); renderAll();
+  });
+  var endArmed = false;
+  $("lv-end").addEventListener("click", function () {
+    if (!endArmed) { endArmed = true; $("lv-end").textContent = "Tocca ancora per chiudere e salvare"; setTimeout(function () { endArmed = false; $("lv-end").textContent = "Termina partita"; }, 4000); return; }
+    endArmed = false; $("lv-end").textContent = "Termina partita";
+    var g = findGame(liveId), t = TM[g.team];
+    var r = Logic.liveResult(edits.live[liveId], g, t);
+    edits.ris[liveId] = r.ris;
+    if (r.tab.length) edits.tab[liveId] = r.tab;
+    edits.live[liveId].chiusa = true;
+    if (A && A.liveClear) { try { A.liveClear(); } catch (e) {} }
+    $("live").classList.remove("open");
+    var id = liveId;
+    saveEdits();
+    FX.vibrate(30);
+    var gg = findGame(id);
+    if (Logic.esito(gg, TM[gg.team]) === "vinta") FX.confetti(TM[gg.team].club);
+    openRecap(id);
+  });
+
+  // ---------- Riepilogo ----------
+  var recapId = null;
+  function openRecap(id) {
+    recapId = id;
+    var g = findGame(id);
+    $("recap-text").value = Logic.recap(g, TM[g.team]);
+    $("recap-sheet").classList.add("open"); $("sheet-bg").classList.add("open");
+  }
+  function closeRecap() { $("recap-sheet").classList.remove("open"); $("sheet-bg").classList.remove("open"); }
+  $("recap-close").addEventListener("click", closeRecap);
+  $("recap-share").addEventListener("click", function () { shareOut($("recap-text").value); });
+  $("recap-img").addEventListener("click", function () { closeRecap(); openImage(recapId); });
+
+  // ---------- Presenze agli allenamenti ----------
+  var presId = null, presDraft = [];
+  function presRoster(g) {
+    // numeri delle squadre dello stesso club + presenze già segnate
+    var set = {};
+    BASE.squadre.forEach(function (t) { if (t.club === TM[g.team].club) roster(t.id).forEach(function (n) { set[n] = 1; }); });
+    DATA.partite.forEach(function (x) { if (x.team === g.team && x.presenti) x.presenti.forEach(function (n) { set[n] = 1; }); });
+    presDraft.forEach(function (n) { set[n] = 1; });
+    return Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
+  }
+  function renderPres() {
+    var g = findGame(presId);
+    $("pres-grid").innerHTML = presRoster(g).map(function (n) {
+      return '<button data-n="' + n + '"' + (presDraft.indexOf(n) >= 0 ? ' class="on"' : "") + "><b>" + n + "</b><small>" + (presDraft.indexOf(n) >= 0 ? "presente" : "—") + "</small></button>";
+    }).join("") || '<p class="empty" style="grid-column:1/-1">Aggiungi i numeri di maglia qui sotto.</p>';
+    $("pres-grid").querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var n = +b.dataset.n, i = presDraft.indexOf(n);
+        if (i >= 0) presDraft.splice(i, 1); else presDraft.push(n);
+        FX.vibrate(8); renderPres();
+      });
+    });
+    $("pres-count").textContent = presDraft.length + " presenti";
+  }
+  function openPres(id) {
+    presId = id;
+    var g = findGame(id);
+    presDraft = (edits.pres[id] || []).slice();
+    $("pres-title").textContent = Logic.matchTitle(g) + " · " + Logic.dayLabel(g.data);
+    renderPres();
+    $("pres-sheet").classList.add("open"); $("sheet-bg").classList.add("open");
+  }
+  function closePres() { $("pres-sheet").classList.remove("open"); $("sheet-bg").classList.remove("open"); }
+  $("pres-close").addEventListener("click", closePres);
+  $("pres-addnum").addEventListener("click", function () {
+    var v = $("pres-newnum").value; if (v === "") return;
+    if (presDraft.indexOf(+v) < 0) presDraft.push(+v);
+    $("pres-newnum").value = ""; renderPres();
+  });
+  $("pres-save").addEventListener("click", function () {
+    if (presDraft.length) edits.pres[presId] = presDraft.slice().sort(function (a, b) { return a - b; }); else delete edits.pres[presId];
+    closePres(); saveEdits(); FX.vibrate(15);
+  });
+
+  function attendanceHtml(teamId) {
+    var a = Logic.attendance(DATA, teamId);
+    if (!a.sedute) return '<p class="empty">Nessuna presenza segnata.</p>';
+    return '<div class="kpis"><div class="kpi"><b>' + a.sedute + '</b><span>Allenamenti segnati</span></div>' +
+      '<div class="kpi"><b>' + a.giocatori.length + '</b><span>Giocatori</span></div>' +
+      '<div class="kpi"><b>' + Math.round(a.giocatori.reduce(function (s, x) { return s + x.perc; }, 0) / Math.max(1, a.giocatori.length) * 100) + '%</b><span>Presenza media</span></div></div>' +
+      "<h2>Presenze per numero</h2>" + '<div class="card bars">' + a.giocatori.map(function (x, i) {
+        return '<div class="q"><div><b>#' + x.n + '</b></div><div class="track"><div class="bar f" style="width:' + (x.perc * 100) + "%;animation-delay:" + (i * 50) + 'ms"></div>' +
+          '<div class="v">' + x.presenze + " su " + a.sedute + " · " + Math.round(x.perc * 100) + "%</div></div></div>";
+      }).join("") + "</div>";
+  }
+
+  // ---------- Resoconto di stagione (PDF) ----------
+  function reportHtml(teamId) {
+    var t = TM[teamId], st = Logic.stats(DATA, teamId), a = Logic.attendance(DATA, teamId.indexOf("bd-") === 0 ? "bd-all" : "li-all");
+    var f1 = function (x) { return (Math.round(x * 10) / 10).toString().replace(".", ","); };
+    var rows = st.partite.map(function (r) {
+      return "<tr><td>" + esc(Logic.dayLabel(r.g.data)) + "</td><td>" + esc(Logic.matchTitle(r.g)) + "</td><td>" + r.fatti + "–" + r.subiti + "</td><td>" + { vinta: "V", persa: "P", pari: "=" }[r.esito] + "</td></tr>";
+    }).join("");
+    var pl = st.giocatori.map(function (x) {
+      return "<tr><td>#" + x.n + "</td><td>" + x.partite + "</td><td>" + (x.partitePunti ? x.punti : "–") + "</td><td>" + (x.partitePunti ? f1(x.punti / x.partitePunti) : "–") + "</td><td>" + x.falli + "</td></tr>";
+    }).join("");
+    var q = st.quarti.map(function (x) { return "<tr><td>" + x.periodo + "</td><td>" + f1(x.fatti) + "</td><td>" + f1(x.subiti) + "</td></tr>"; }).join("");
+    var pres = a.giocatori.map(function (x) { return "<tr><td>#" + x.n + "</td><td>" + x.presenze + " su " + a.sedute + "</td><td>" + Math.round(x.perc * 100) + "%</td></tr>"; }).join("");
+    var logo = window.LOGHI[t.club === "LIONS" ? "lions" : "bulldogs"];
+    var col = t.club === "LIONS" ? "#1f7a3d" : "#2443c8";
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Resoconto ' + esc(Logic.teamLabel(t)) + "</title><style>" +
+      "body{font:12pt system-ui,sans-serif;color:#111;margin:24px}h1{margin:0;color:" + col + "}h2{font-size:13pt;margin:22px 0 6px;color:" + col + "}" +
+      "table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid #ddd;padding:5px 6px;text-align:left}th{font-size:10pt;color:#555}" +
+      ".h{display:flex;gap:16px;align-items:center}.h img{width:72px;height:72px}.k{display:flex;gap:24px;margin-top:10px}.k b{font-size:20pt;display:block}</style></head><body>" +
+      '<div class="h"><img src="' + logo + '"><div><h1>' + esc(Logic.teamLabel(t)) + "</h1><div>" + esc(t.campionato) + " · stagione 2026/27</div></div></div>" +
+      '<div class="k"><div><b>' + st.vinte + "–" + st.perse + "</b>vinte–perse</div><div><b>" + f1(st.mediaFatti) + "</b>punti fatti (media)</div><div><b>" + f1(st.mediaSubiti) + "</b>punti subiti (media)</div></div>" +
+      (rows ? "<h2>Partite</h2><table><tr><th>Data</th><th>Partita</th><th>Punti</th><th>Esito</th></tr>" + rows + "</table>" : "") +
+      (q ? "<h2>Media per quarto</h2><table><tr><th>Quarto</th><th>Fatti</th><th>Subiti</th></tr>" + q + "</table>" : "") +
+      (pl ? "<h2>Giocatori (per numero)</h2><table><tr><th>N°</th><th>Gare</th><th>Punti</th><th>Media</th><th>Falli</th></tr>" + pl + "</table>" : "") +
+      (pres ? "<h2>Presenze agli allenamenti</h2><table><tr><th>N°</th><th>Presenze</th><th>%</th></tr>" + pres + "</table>" : "") +
+      '<p style="margin-top:24px;font-size:9pt;color:#777">Generato da ' + esc(CFG.nome) + " il " + Logic.fmtDM(new Date().toISOString().slice(0, 10)) + "</p></body></html>";
+  }
+  $("btn-report").addEventListener("click", function () {
+    var id = /-all$/.test(statsTeam) ? (statsTeam.indexOf("bd-") === 0 ? "bd-u15" : "li-sen") : statsTeam;
+    if (!TM[id]) id = BASE.squadre[0].id;
+    var html = reportHtml(id);
+    if (A && A.printHtml) A.printHtml(html, "Resoconto " + Logic.teamLabel(TM[id]));
+    else { var w = window.open("", "_blank"); if (w) { w.document.write(html); w.document.close(); setTimeout(function () { w.print(); }, 400); } }
+  });
+
   // ---------- Grafica per WhatsApp ----------
   var imgData = "", imgName = "";
   function openImage(id) {
@@ -860,8 +1102,8 @@
   // ---------- Statistiche ----------
   var statsTeam = "bd-u15";
   function renderStats() {
-    var teams = BASE.squadre.filter(function (t) { return !/-all$/.test(t.id); });
-    var withRes = teams.filter(function (t) { var x = Logic.stats(DATA, t.id); return x.giocate > 0 || x.giocatori.length > 0; });
+    var teams = BASE.squadre.filter(function (t) { return !/-all$/.test(t.id) || Logic.attendance(DATA, t.id).sedute > 0; });
+    var withRes = teams.filter(function (t) { var x = Logic.stats(DATA, t.id); return x.giocate > 0 || x.giocatori.length > 0 || Logic.attendance(DATA, t.id).sedute > 0; });
     var list = withRes.length ? withRes : teams.filter(function (t) { return t.id === statsTeam; });
     if (!list.some(function (t) { return t.id === statsTeam; }) && list.length) statsTeam = list[0].id;
     $("stats-team").innerHTML = list.map(function (t) {
@@ -872,6 +1114,7 @@
     });
     var st = Logic.stats(DATA, statsTeam), t = TM[statsTeam];
     document.getElementById("view-stats").style.setProperty("--accent", t.club === "LIONS" ? "var(--lions)" : "var(--bulldogs)");
+    if (/-all$/.test(statsTeam)) { $("stats").innerHTML = attendanceHtml(statsTeam); return; }
     if (!st.giocate && !st.giocatori.length) {
       $("stats").innerHTML = '<p class="empty">Nessun risultato inserito per ' + esc(Logic.teamLabel(t)) + '. Aggiungili da una partita con «Risultato e referto».</p>';
       return;
@@ -1225,14 +1468,30 @@
   rebuild();
   renderVersion();
   if (["mie", "Bulldogs", "LIONS", "tutte"].indexOf(filtri.scope) >= 0) ui.scope = filtri.scope;
-  if (CFG.web) {
-    document.body.classList.add("web-app");
-    var sl = CFG.slug || "bulldogs";
+  if (CFG.web) document.body.classList.add("web-app");
+  if (CFG.club && CFG.ics) {
+    var sl = CFG.slug || (CFG.club === "LIONS" ? "lions" : "bulldogs");
     var feeds = [[sl + ".ics", "Tutto " + CFG.club + " (gare e allenamenti)"]];
     BASE.squadre.forEach(function (t) { feeds.push([sl + "-" + t.id.replace(/^(bd|li)-/, "") + ".ics", Logic.teamLabel(t)]); });
-    $("ics-list").innerHTML = feeds.map(function (f) {
-      return '<a class="ics-row" href="' + esc(CFG.ics.replace(/^https:/, "webcal:") + f[0]) + '">' + esc(f[1]) + "<span>Abbonati</span></a>";
-    }).join("");
+    if (CFG.web) {
+      $("ics-list").innerHTML = feeds.map(function (f) {
+        return '<a class="ics-row" href="' + esc(CFG.ics.replace(/^https:/, "webcal:") + f[0]) + '">' + esc(f[1]) + "<span>Abbonati</span></a>";
+      }).join("");
+    } else {
+      $("ics-title").textContent = "Calendario in abbonamento";
+      $("ics-hint").textContent = "Per avere le partite in Google Calendar senza le notifiche dell'app: copia il link, poi da computer su calendar.google.com → Altri calendari → «+» → Da URL, e incollalo. Si aggiorna da solo.";
+      $("ics-list").innerHTML = feeds.map(function (f) {
+        return '<button class="ics-row" style="width:100%;background:none;border:0;border-bottom:1px solid var(--line)" data-ics="' + esc(CFG.ics + f[0]) + '">' + esc(f[1]) + "<span>Copia link</span></button>";
+      }).join("");
+      $("ics-list").querySelectorAll("[data-ics]").forEach(function (b) {
+        b.addEventListener("click", function () {
+          var u = b.dataset.ics;
+          if (A && A.copy) A.copy(u); else if (navigator.clipboard) navigator.clipboard.writeText(u);
+          $("ics-msg").textContent = "Link copiato: " + u;
+          FX.vibrate(10);
+        });
+      });
+    }
   }
   if (CFG.club) {
     ui.scope = CFG.club;

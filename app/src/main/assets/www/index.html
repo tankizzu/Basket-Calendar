@@ -79,6 +79,7 @@
   <section id="view-stats" class="view">
     <div class="seg" id="stats-team"></div>
     <div id="stats"></div>
+    <div class="row" style="margin-top:12px"><button class="btn ghost" id="btn-report">Resoconto di stagione (PDF)</button></div>
   </section>
 
   <!-- LUOGHI -->
@@ -99,10 +100,13 @@
       <button data-theme="dark"><span class="sw dark"></span>Scuro</button>
     </div>
 
-    <div class="solo-web" id="web-cal">
-    <h2>Calendario dell'iPhone</h2>
-    <p class="hint">Tocca un calendario per abbonarti: le partite entrano nel Calendario dell'iPhone, con un avviso 3 ore prima, e si aggiornano da sole quando cambiano.</p>
+    <div class="solo-club" id="club-cal">
+    <h2 id="ics-title">Calendario dell'iPhone</h2>
+    <p class="hint" id="ics-hint">Tocca un calendario per abbonarti: le partite entrano nel Calendario dell'iPhone, con un avviso 3 ore prima, e si aggiornano da sole quando cambiano.</p>
     <div class="card" id="ics-list"></div>
+    <p class="status ok" id="ics-msg"></p>
+    </div>
+    <div class="solo-web" id="web-cal">
     <h2>Installa sulla schermata Home</h2>
     <p class="hint">In Safari tocca il pulsante Condividi (il quadrato con la freccia) e poi «Aggiungi alla schermata Home». L'app si aprirà a tutto schermo.</p>
     </div>
@@ -226,6 +230,7 @@
         <option value="annullata">Annullata</option>
       </select>
     </label>
+    <label id="ed-pass-wrap">Passaggi (chi guida, posti liberi) <input type="text" id="ed-pass" placeholder="es. Marco 3 posti, Luca 2"></label>
     <label>Note <input type="text" id="ed-note"></label>
     <p class="status ko" id="ed-err"></p>
     <div class="row">
@@ -262,6 +267,57 @@
       <button class="btn" id="rs-save">Salva risultato</button>
       <button class="btn ghost" id="rs-close">Chiudi</button>
       <button class="btn ghost" id="rs-clear">Togli risultato</button>
+    </div>
+  </div>
+</div>
+
+<!-- Partita dal vivo -->
+<div class="live" id="live" aria-hidden="true">
+  <div class="lv-top">
+    <button class="btn ghost small" id="lv-close">Chiudi</button>
+    <div class="lv-title" id="lv-title"></div>
+    <button class="btn ghost small" id="lv-undo">Annulla</button>
+  </div>
+  <div class="lv-score">
+    <div><div class="lv-name" id="lv-noi-n"></div><div class="lv-pts" id="lv-noi"></div></div>
+    <div class="lv-mid"><div class="lv-qs" id="lv-qs"></div><div class="lv-tf" id="lv-tf"></div></div>
+    <div><div class="lv-name" id="lv-loro-n"></div><div class="lv-pts" id="lv-loro"></div></div>
+  </div>
+  <div class="lv-actions" id="lv-actions">
+    <button data-a="p1">+1 TL</button><button data-a="p2">+2</button><button data-a="p3">+3</button><button data-a="f" class="foul">Fallo</button>
+  </div>
+  <p class="lv-hint" id="lv-hint">Scegli l'azione, poi il numero di maglia.</p>
+  <div class="lv-grid" id="lv-grid"></div>
+  <div class="lv-add"><input type="number" inputmode="numeric" id="lv-newnum" placeholder="N° maglia"><button class="btn ghost small" id="lv-addnum">+ Aggiungi</button></div>
+  <div class="lv-opp"><span>Avversari</span><button data-o="1">+1</button><button data-o="2">+2</button><button data-o="3">+3</button></div>
+  <div class="lv-log" id="lv-log"></div>
+  <div class="lv-bottom"><button class="btn danger" id="lv-end">Termina partita</button></div>
+</div>
+
+<!-- Riepilogo -->
+<div class="sheet" id="recap-sheet">
+  <h2>Riepilogo della partita</h2>
+  <div class="form">
+    <textarea id="recap-text" rows="9"></textarea>
+    <div class="row">
+      <button class="btn" id="recap-share">Condividi testo</button>
+      <button class="btn ghost" id="recap-img">Grafica</button>
+      <button class="btn ghost" id="recap-close">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<!-- Presenze -->
+<div class="sheet" id="pres-sheet">
+  <h2>Presenze</h2>
+  <p class="hint" id="pres-title"></p>
+  <div class="form">
+    <div class="lv-grid pres" id="pres-grid"></div>
+    <div class="lv-add"><input type="number" inputmode="numeric" id="pres-newnum" placeholder="N° maglia"><button class="btn ghost small" id="pres-addnum">+ Aggiungi</button></div>
+    <p class="status" id="pres-count"></p>
+    <div class="row">
+      <button class="btn" id="pres-save">Salva presenze</button>
+      <button class="btn ghost" id="pres-close">Chiudi</button>
     </div>
   </div>
 </div>

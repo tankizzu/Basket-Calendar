@@ -229,6 +229,32 @@ public class Bridge {
         });
     }
 
+    /** Notifica fissa con il punteggio durante la partita dal vivo. */
+    @JavascriptInterface
+    public void liveNotify(String title, String text) { Notifier.showLive(activity, title, text); }
+
+    @JavascriptInterface
+    public void liveClear() { Notifier.clearLive(activity); }
+
+    /** Stampa (o salva in PDF) una pagina HTML con il servizio di stampa di Android. */
+    @JavascriptInterface
+    public void printHtml(String html, String name) {
+        activity.runOnUiThread(() -> {
+            final android.webkit.WebView pw = new android.webkit.WebView(activity);
+            pw.setWebViewClient(new android.webkit.WebViewClient() {
+                @Override
+                public void onPageFinished(android.webkit.WebView view, String url) {
+                    android.print.PrintManager pm = (android.print.PrintManager) activity.getSystemService(android.content.Context.PRINT_SERVICE);
+                    String job = (name == null || name.isEmpty()) ? "Resoconto" : name;
+                    pm.print(job, view.createPrintDocumentAdapter(job), new android.print.PrintAttributes.Builder().build());
+                    activity.keepPrintView(view);
+                }
+            });
+            pw.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+            activity.keepPrintView(pw);
+        });
+    }
+
     @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }
