@@ -83,6 +83,10 @@
     renderNotifStatus(rem.length);
   }
 
+  function logo(club) {
+    return '<img class="tlogo" alt="" src="img/' + (club === "LIONS" ? "lions" : "bulldogs") + '.png">';
+  }
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
@@ -122,7 +126,7 @@
     ids.forEach(function (id) { ui.teams[id] = true; });
     $("team-chips").innerHTML = ids.map(function (id) {
       var t = TM[id];
-      return '<button class="chip on ' + t.club + '" data-team="' + id + '">' + esc(Logic.teamLabel(t)) + "</button>";
+      return '<button class="chip on ' + t.club + '" data-team="' + id + '">' + logo(t.club) + esc(Logic.teamLabel(t)) + "</button>";
     }).join("");
     document.querySelectorAll("#team-chips .chip").forEach(function (c) {
       c.addEventListener("click", function () {
@@ -192,7 +196,7 @@
     return '<div class="card game ' + t.club + (Logic.isTraining(g) ? " training" : "") + " " + (g.stato === "annullata" ? "annullata " : "") + (past ? "past" : "") + '" data-id="' + g.id + '">' +
       '<div class="time">' + esc(g.ora) + (showDate ? '<div class="meta">' + esc(Logic.shortDate(g.data)) + "</div>" : "") + "</div>" +
       "<div>" +
-      '<div class="team">' + esc(Logic.teamLabel(t)) + "</div>" +
+      '<div class="team">' + logo(t.club) + esc(Logic.teamLabel(t)) + "</div>" +
       '<div class="match">' + esc(Logic.matchTitle(g)) + "</div>" +
       (Logic.esito(g, t) ? '<div class="score">' + g.risultato.casa + " – " + g.risultato.ospite + "</div>" : "") +
       '<div class="meta">' + (g.sede ? esc(g.sede) : "Sede non indicata") + "</div>" +
@@ -274,7 +278,7 @@
     })[0];
     if (!next) { $("hero").innerHTML = ""; return; }
     var t = TM[next.team];
-    $("hero").innerHTML = '<div class="hero ' + t.club + '"><div class="k">Prossima partita · ' + esc(Logic.teamLabel(t)) + "</div>" +
+    $("hero").innerHTML = '<div class="hero ' + t.club + '"><img class="logo" alt="" src="img/' + (t.club === "LIONS" ? "lions" : "bulldogs") + '.png"><div class="k">Prossima partita · ' + esc(Logic.teamLabel(t)) + "</div>" +
       '<div class="when">' + esc(countdown(next, now)) + "</div>" +
       '<div class="what">' + esc(Logic.matchTitle(next)) + "</div>" +
       '<div class="where">' + esc(Logic.dayLabel(next.data)) + " · " + esc(next.ora) + (next.sede ? " · " + esc(next.sede) : "") + "</div>" +

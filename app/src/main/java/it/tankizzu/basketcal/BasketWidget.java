@@ -44,7 +44,7 @@ public class BasketWidget extends AppWidgetProvider {
                 if (o.getLong("at") < now - 30 * 60000L) continue;
                 v.setViewVisibility(ROWS[shown], View.VISIBLE);
                 v.setImageViewResource(BARS[shown], "LIONS".equals(o.optString("club"))
-                        ? R.drawable.widget_bar_li : R.drawable.widget_bar_bd);
+                        ? R.drawable.logo_lions : R.drawable.logo_bulldogs);
                 String when = o.optString("giorno") + " · " + o.optString("ora");
                 String sotto = o.optString("sotto");
                 v.setTextViewText(WHEN[shown], sotto.isEmpty() ? when : when + " · " + sotto);

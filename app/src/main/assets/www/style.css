@@ -1,7 +1,7 @@
 /* Calendari Basket – stile */
 :root{
   --bg:#f3f4f6; --card:#ffffff; --ink:#111318; --ink2:#3a3f48; --muted:#6b7280; --line:#e5e7eb; --soft:#f0f1f4;
-  --bulldogs:#2952e3; --bulldogs-soft:#e8edff; --lions:#d97706; --lions-soft:#fff3e0;
+  --bulldogs:#2443c8; --bulldogs-soft:#e8edff; --bdgold:#f2c500; --lions:#1f7a3d; --lions-soft:#e6f3ea; --bronze:#b5814f;
   --warn:#c4321e; --warn-bg:#fdeceb; --ok:#0f7b4f; --ok-bg:#e6f6ee; --user:#6d4fe8; --user-bg:#f0ecff;
   --hero1:#14161b; --hero2:#2a2f3a;
   --r:14px; --shadow:0 1px 2px rgba(17,19,24,.05),0 4px 14px rgba(17,19,24,.05);
@@ -10,7 +10,7 @@
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#0f1115; --card:#181b21; --ink:#f2f3f5; --ink2:#c9ccd3; --muted:#8b919c; --line:#2a2e36; --soft:#20242b;
-    --bulldogs:#6f8dff; --bulldogs-soft:#1c2440; --lions:#f3a43c; --lions-soft:#33250f;
+    --bulldogs:#7d96ff; --bulldogs-soft:#1c2440; --lions:#4cc27a; --lions-soft:#132d1d;
     --warn:#ff7a66; --warn-bg:#3a1d19; --ok:#3ccf8e; --ok-bg:#12301f; --user:#a996ff; --user-bg:#262040;
     --hero1:#1d2230; --hero2:#2b3346; --shadow:none;
   }
@@ -62,8 +62,13 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .hero .what{font-weight:650}
 .hero .where{font-size:13px;opacity:.75;margin-top:2px}
 .hero .pill{display:inline-block;margin-top:10px;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.14);font-size:12px;font-weight:600}
-.hero.Bulldogs{background:linear-gradient(135deg,#17255e,#2952e3)}
-.hero.LIONS{background:linear-gradient(135deg,#5c2f00,#d97706)}
+.hero.Bulldogs{background:linear-gradient(135deg,#14206b 0%,#2443c8 70%);box-shadow:inset 0 -4px 0 #f2c500}
+.hero.LIONS{background:linear-gradient(135deg,#0f3d20 0%,#1f7a3d 65%,#7a5a36 130%);box-shadow:inset 0 -4px 0 #b5814f}
+.hero .logo{position:absolute;right:14px;top:14px;width:64px;height:64px;border-radius:50%;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:1;animation:pop .5s var(--ease) both}
+.hero .k,.hero .when,.hero .what{padding-right:76px}
+@keyframes pop{from{transform:scale(.6) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
+.tlogo{width:16px;height:16px;border-radius:50%;vertical-align:-3px;margin-right:5px;box-shadow:0 0 0 1px var(--line)}
+.chip .tlogo{width:16px;height:16px;margin:0 5px 0 -5px;box-shadow:none}
 
 /* Liste */
 .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
