@@ -133,19 +133,30 @@
     }).map(function (t) { return t.id; });
   }
 
+  // Filtri ricordati tra un'apertura e l'altra: squadre nascoste per ogni vista, vista scelta, spunte.
+  var filtri = loadJSON("filtri") || {};
+  filtri.nascoste = filtri.nascoste || {};
+  function saveFiltri() {
+    filtri.scope = ui.scope; filtri.showPast = ui.showPast; filtri.showTrain = ui.showTrain;
+    storeJSON("filtri", filtri);
+  }
+
   function renderChips() {
     var ids = scopeTeams();
+    var off = filtri.nascoste[ui.scope] || [];
     ui.teams = {};
-    ids.forEach(function (id) { ui.teams[id] = true; });
+    ids.forEach(function (id) { ui.teams[id] = off.indexOf(id) < 0; });
     $("team-chips").innerHTML = ids.map(function (id) {
       var t = TM[id];
-      return '<button class="chip on ' + t.club + '" data-team="' + id + '">' + logo(t.club) + esc(Logic.teamLabel(t)) + "</button>";
+      return '<button class="chip ' + (ui.teams[id] ? "on " : "") + t.club + '" data-team="' + id + '">' + logo(t.club) + esc(Logic.teamLabel(t)) + "</button>";
     }).join("");
     document.querySelectorAll("#team-chips .chip").forEach(function (c) {
       c.addEventListener("click", function () {
         var id = c.dataset.team;
         ui.teams[id] = !ui.teams[id];
         c.classList.toggle("on", ui.teams[id]);
+        filtri.nascoste[ui.scope] = scopeTeams().filter(function (x) { return !ui.teams[x]; });
+        saveFiltri();
         renderFiltered();
       });
     });
@@ -156,6 +167,7 @@
       ui.scope = b.dataset.scope;
       document.querySelectorAll("#scope button").forEach(function (x) { x.classList.toggle("on", x === b); });
       applyClubTheme();
+      saveFiltri();
       renderChips(); renderFiltered();
     });
   });
@@ -348,8 +360,8 @@
     }).join("");
     bindCards(el);
   }
-  $("show-past").addEventListener("change", function (e) { ui.showPast = e.target.checked; renderList(); });
-  $("show-train").addEventListener("change", function (e) { ui.showTrain = e.target.checked; renderList(); });
+  $("show-past").addEventListener("change", function (e) { ui.showPast = e.target.checked; saveFiltri(); renderList(); });
+  $("show-train").addEventListener("change", function (e) { ui.showTrain = e.target.checked; saveFiltri(); renderList(); });
 
   // ---------- Calendario mensile ----------
   function renderCalendar() {
@@ -1164,6 +1176,12 @@
 
   rebuild();
   renderVersion();
+  if (["mie", "Bulldogs", "LIONS", "tutte"].indexOf(filtri.scope) >= 0) ui.scope = filtri.scope;
+  if (typeof filtri.showPast === "boolean") ui.showPast = filtri.showPast;
+  if (typeof filtri.showTrain === "boolean") ui.showTrain = filtri.showTrain;
+  document.querySelectorAll("#scope button").forEach(function (x) { x.classList.toggle("on", x.dataset.scope === ui.scope); });
+  $("show-past").checked = ui.showPast;
+  $("show-train").checked = ui.showTrain;
   renderChips(); renderAll(); renderPromemoria(); renderRitrovo(); renderPause(); renderIcon(); applyClubTheme();
   FX.splash();
   renderNotifStatus(); renderCalSettings();
