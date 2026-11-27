@@ -199,3 +199,11 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
   *,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}
 }
 @media (prefers-color-scheme: dark){.chip.on{color:#0f1115}}
+.tab-ed .tr{display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:6px;margin-bottom:6px;align-items:center}
+.tab-ed .tr.th span{font-size:12px;color:var(--muted)}
+.tab-ed input{font:inherit;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);width:100%;text-align:center}
+.ptab{padding:6px 8px;overflow-x:auto}
+.ptab table{width:100%;border-collapse:collapse;font-size:14px}
+.ptab th{font-size:11px;color:var(--muted);font-weight:600;text-align:center;padding:6px 4px;border-bottom:1px solid var(--line)}
+.ptab td{text-align:center;padding:7px 4px;border-bottom:1px solid var(--line)}
+.ptab tr:last-child td{border-bottom:0}

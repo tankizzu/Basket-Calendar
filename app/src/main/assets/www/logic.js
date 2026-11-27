@@ -218,8 +218,7 @@ var Logic = (function () {
   function defaultSettings(data) {
     var s = {
       orgGiorni: 12, orgOra: "09:00", preOre: 3, calendarId: "", squadre: {}, sedeCasa: {}, pause: [],
-      ritrovo: { Bulldogs: { casa: 30, trasferta: 60, luogoCasa: "", luogoTrasferta: "" }, LIONS: { casa: 30, trasferta: 60, luogoCasa: "", luogoTrasferta: "" } },
-      soldirini: { url: "https://tankizzu.github.io/soldirini/soldirini/", squadre: ["bd-u15", "bd-all"] }
+      ritrovo: { Bulldogs: { casa: 30, trasferta: 60, luogoCasa: "", luogoTrasferta: "" }, LIONS: { casa: 30, trasferta: 60, luogoCasa: "", luogoTrasferta: "" } }
     };
     data.squadre.forEach(function (t) {
       var on = !!t.mia && !t.spentiDiDefault;
@@ -238,10 +237,6 @@ var Logic = (function () {
         if (saved.ritrovo[c][k] !== undefined) s.ritrovo[c][k] = saved.ritrovo[c][k];
       });
     });
-    if (saved.soldirini) {
-      if (saved.soldirini.url) s.soldirini.url = saved.soldirini.url;
-      if (saved.soldirini.squadre) s.soldirini.squadre = saved.soldirini.squadre;
-    }
     ["orgGiorni", "orgOra", "preOre", "calendarId"].forEach(function (k) {
       if (saved[k] !== undefined && saved[k] !== null) s[k] = saved[k];
     });
@@ -326,6 +321,7 @@ var Logic = (function () {
       }
       if (edits.ris && edits.ris[g.id]) g.risultato = edits.ris[g.id];
       g.foto = (edits.foto && edits.foto[g.id]) || [];
+      if (edits.tab && edits.tab[g.id] && edits.tab[g.id].length) g.tabellino = edits.tab[g.id];
       if (!g.sede && g.casa && sedeCasa[g.team]) { g.sede = sedeCasa[g.team]; g.sedeDaImpostazioni = true; }
       out.push(g);
     });
@@ -407,6 +403,17 @@ var Logic = (function () {
       });
       s.partite.push({ g: g, fatti: f, subiti: su, esito: e });
     });
+    // Giocatori per numero di maglia (dalle gare con tabellino, anche senza risultato)
+    var pl = {};
+    data.partite.forEach(function (g) {
+      if (g.team !== teamId || isTraining(g) || g.stato === "annullata" || !g.tabellino) return;
+      g.tabellino.forEach(function (r) {
+        var k = String(r.n);
+        var x = pl[k] = pl[k] || { n: r.n, partite: 0, punti: 0, falli: 0, max: 0 };
+        x.partite++; x.punti += +r.p || 0; x.falli += +r.f || 0; x.max = Math.max(x.max, +r.p || 0);
+      });
+    });
+    s.giocatori = Object.keys(pl).map(function (k) { return pl[k]; }).sort(function (a, b) { return b.punti - a.punti || a.n - b.n; });
     s.quarti = q.map(function (x, i) {
       return { periodo: i < 4 ? (i + 1) + "° quarto" : "Suppl. " + (i - 3), fatti: x.fatti / x.n, subiti: x.subiti / x.n, n: x.n };
     });
@@ -415,34 +422,6 @@ var Logic = (function () {
     return s;
   }
 
-  // Attività per Soldirini (rimborso km): gare e allenamenti non annullati delle squadre scelte, in un mese.
-  function soldiriniExport(data, month, teamIds) {
-    var tm = teamMap(data);
-    var att = data.partite.filter(function (g) {
-      return g.data.slice(0, 7) === month && teamIds.indexOf(g.team) >= 0 && g.stato !== "annullata";
-    }).map(function (g) {
-      var t = tm[g.team];
-      var tr = isTraining(g);
-      var fine = g.oraFine;
-      if (!fine) {
-        var d = new Date(toDate(g.data, g.ora).getTime() + 2 * 3600000);
-        fine = pad(d.getHours()) + ":" + pad(d.getMinutes());
-      }
-      return {
-        id: g.id, data: g.data, tipo: tr ? "allenamento" : "partita",
-        squadra: tr ? (g.gruppo || t.club) : t.nome, avversario: tr ? "" : (g.casa ? g.squadraOspite : g.squadraCasa),
-        casa: tr ? true : !!g.casa, luogo: g.sede || "", da: g.ora, a: fine,
-        previsto: toDate(g.data, g.ora) > new Date()
-      };
-    });
-    return { fonte: "calendari-basket", versione: 1, mese: month, attivita: att };
-  }
-
-  function b64url(str) {
-    var bytes = unescape(encodeURIComponent(str));
-    var b = typeof btoa === "function" ? btoa(bytes) : Buffer.from(bytes, "binary").toString("base64");
-    return b.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  }
 
   function newGame(teamId, club, f) {
     var id = teamId + "-u" + Date.now().toString(36);
@@ -504,7 +483,7 @@ var Logic = (function () {
   }
 
   return {
-    applyEdits: applyEdits, stats: stats, soldiriniExport: soldiriniExport, b64url: b64url, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
+    applyEdits: applyEdits, stats: stats, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
     teamMap: teamMap, toDate: toDate, dayLabel: dayLabel, shortDate: shortDate, teamLabel: teamLabel,
     isActive: isActive, isPast: isPast, overlaps: overlaps, checkU15Weekend: checkU15Weekend,
     matchTitle: matchTitle, buildReminders: buildReminders, buildCalendarEvents: buildCalendarEvents,

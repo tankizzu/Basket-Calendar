@@ -19,7 +19,7 @@
 
   var settings = Logic.mergeSettings(BASE, loadJSON("settings"));
   var edits = loadJSON("edits") || {};
-  ["mod", "ris", "foto"].forEach(function (k) { edits[k] = edits[k] || {}; });
+  ["mod", "ris", "foto", "tab"].forEach(function (k) { edits[k] = edits[k] || {}; });
   ["add", "del"].forEach(function (k) { edits[k] = edits[k] || []; });
   var DATA;
   var now0 = new Date();
@@ -506,7 +506,7 @@
 
   $("btn-add").addEventListener("click", function () { openEditor(null); });
   $("ed-cancel").addEventListener("click", closeEditor);
-  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); closeSoldi(); });
+  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); });
 
   $("ed-save").addEventListener("click", function () {
     var cur = ui.editId ? findGame(ui.editId) : null;
@@ -573,6 +573,50 @@
   $("viewer").addEventListener("click", function () { $("viewer").classList.remove("open"); });
 
   var resId = null;
+  var tabDraft = [];
+
+  function renderTab() {
+    $("rs-tab").innerHTML = tabDraft.length ? '<div class="tr th"><span>N° maglia</span><span>Punti</span><span>Falli</span><span></span></div>' +
+      tabDraft.map(function (r, i) {
+        return '<div class="tr"><input type="number" inputmode="numeric" data-ti="' + i + '" data-k="n" value="' + esc(r.n) + '">' +
+          '<input type="number" inputmode="numeric" data-ti="' + i + '" data-k="p" value="' + esc(r.p) + '">' +
+          '<input type="number" inputmode="numeric" min="0" max="5" data-ti="' + i + '" data-k="f" value="' + esc(r.f) + '">' +
+          '<button class="btn ghost small" data-trm="' + i + '" aria-label="Togli">×</button></div>';
+      }).join("") : '<p class="empty">Nessun giocatore. Tocca «+ Giocatore».</p>';
+    $("rs-tab").querySelectorAll("input").forEach(function (inp) {
+      inp.addEventListener("input", function () {
+        tabDraft[+inp.dataset.ti][inp.dataset.k] = inp.value === "" ? "" : +inp.value;
+        tabSum();
+      });
+    });
+    $("rs-tab").querySelectorAll("[data-trm]").forEach(function (b) {
+      b.addEventListener("click", function () { tabDraft.splice(+b.dataset.trm, 1); renderTab(); });
+    });
+    tabSum();
+  }
+
+  // Controllo: somma dei punti del tabellino contro il punteggio della tua squadra.
+  function tabSum() {
+    var tot = 0, falli = 0;
+    tabDraft.forEach(function (r) { tot += +r.p || 0; falli += +r.f || 0; });
+    var g = resId ? findGame(resId) : null, msg = "";
+    if (tabDraft.length) {
+      msg = "Totale tabellino: " + tot + " punti, " + falli + " falli.";
+      var c = $("rs-casa").value, o = $("rs-osp").value;
+      if (g && c !== "" && o !== "") {
+        var mine = g.squadraCasa === TM[g.team].club ? +c : +o;
+        if (mine !== tot) msg += " Attenzione: la squadra ne ha fatti " + mine + ".";
+      }
+    }
+    $("rs-tab-sum").textContent = msg;
+  }
+
+  $("rs-tab-add").addEventListener("click", function () {
+    tabDraft.push({ n: "", p: "", f: "" });
+    renderTab();
+    var ins = $("rs-tab").querySelectorAll('input[data-k="n"]');
+    if (ins.length) ins[ins.length - 1].focus();
+  });
   function openResult(id) {
     resId = id;
     var g = findGame(id);
@@ -584,6 +628,8 @@
     $("rs-osp").value = r.ospite != null ? r.ospite : "";
     $("rs-parz").value = r.parziali ? Logic.parzialiText(r) : "";
     $("rs-err").textContent = "";
+    tabDraft = JSON.parse(JSON.stringify(edits.tab[id] || []));
+    renderTab();
     renderResultPhotos();
     $("result-sheet").classList.add("open");
     $("sheet-bg").classList.add("open");
@@ -627,6 +673,12 @@
   $("rs-save").addEventListener("click", function () {
     var c = $("rs-casa").value.trim(), o = $("rs-osp").value.trim();
     if ((c === "") !== (o === "")) { $("rs-err").textContent = "Inserisci entrambi i punteggi."; return; }
+    var bad = tabDraft.some(function (r) { return r.n === "" && (r.p !== "" || r.f !== ""); });
+    if (bad) { $("rs-err").textContent = "Ogni riga del tabellino deve avere il numero di maglia."; return; }
+    var nums = tabDraft.filter(function (r) { return r.n !== ""; }).map(function (r) { return String(r.n); });
+    if (nums.length !== new Set(nums).size) { $("rs-err").textContent = "Un numero di maglia è ripetuto nel tabellino."; return; }
+    var tab = tabDraft.filter(function (r) { return r.n !== ""; }).map(function (r) { return { n: +r.n, p: +r.p || 0, f: +r.f || 0 }; });
+    if (tab.length) edits.tab[resId] = tab; else delete edits.tab[resId];
     if (c === "") delete edits.ris[resId];
     else {
       var parz = Logic.parseParziali($("rs-parz").value);
@@ -690,7 +742,7 @@
   var statsTeam = "bd-u15";
   function renderStats() {
     var teams = BASE.squadre.filter(function (t) { return !/-all$/.test(t.id); });
-    var withRes = teams.filter(function (t) { return Logic.stats(DATA, t.id).giocate > 0; });
+    var withRes = teams.filter(function (t) { var x = Logic.stats(DATA, t.id); return x.giocate > 0 || x.giocatori.length > 0; });
     var list = withRes.length ? withRes : teams.filter(function (t) { return t.id === statsTeam; });
     if (!list.some(function (t) { return t.id === statsTeam; }) && list.length) statsTeam = list[0].id;
     $("stats-team").innerHTML = list.map(function (t) {
@@ -700,7 +752,7 @@
       b.addEventListener("click", function () { statsTeam = b.dataset.st; renderStats(); });
     });
     var st = Logic.stats(DATA, statsTeam), t = TM[statsTeam];
-    if (!st.giocate) {
+    if (!st.giocate && !st.giocatori.length) {
       $("stats").innerHTML = '<p class="empty">Nessun risultato inserito per ' + esc(Logic.teamLabel(t)) + '. Aggiungili da una partita con «Risultato e referto».</p>';
       return;
     }
@@ -717,7 +769,12 @@
           '<div class="bar s" style="width:' + (q.subiti / max * 100) + "%;animation-delay:" + (i * 70 + 35) + 'ms"></div>' +
           '<div class="v">fatti ' + f1(q.fatti) + " · subiti " + f1(q.subiti) + "</div></div></div>";
       }).join("") + '<div class="legend"><span class="dot" style="background:var(--ok)"></span> Fatti <span class="dot" style="background:var(--warn)"></span> Subiti</div></div>' : "") +
-      "<h2>Partite</h2>" + st.partite.map(function (r) {
+      (st.giocatori.length ? "<h2>Giocatori (per numero)</h2>" + '<div class="card ptab"><table><thead><tr><th>N°</th><th>Gare</th><th>Punti</th><th>Media</th><th>Max</th><th>Falli</th><th>F/gara</th></tr></thead><tbody>' +
+        st.giocatori.map(function (x) {
+          return "<tr><td><b>" + esc(x.n) + "</b></td><td>" + x.partite + "</td><td><b>" + x.punti + "</b></td><td>" + f1(x.punti / x.partite) +
+            "</td><td>" + x.max + '</td><td class="' + (x.falli / x.partite >= 4 ? "ko" : "") + '">' + x.falli + "</td><td>" + f1(x.falli / x.partite) + "</td></tr>";
+        }).join("") + "</tbody></table></div>" : "") +
+      (st.partite.length ? "<h2>Partite</h2>" : "") + st.partite.map(function (r) {
         return '<div class="card res"><div><div>' + esc(Logic.matchTitle(r.g)) + '</div><div class="hint" style="margin:0">' +
           esc(Logic.dayLabel(r.g.data)) + "</div></div>" +
           '<div class="e ' + (r.esito === "vinta" ? "ok" : r.esito === "persa" ? "ko" : "") + '">' + r.fatti + "–" + r.subiti + "</div></div>";
@@ -769,61 +826,6 @@
     settings.pause.sort(function (a, b) { return a.dal < b.dal ? -1 : 1; });
     $("pz-dal").value = ""; $("pz-al").value = ""; $("pz-nome").value = "";
     saveSettings(); renderAll(); renderPause(); sync(true);
-  });
-
-  // ---------- Soldirini ----------
-  function renderSoldiSettings() {
-    $("sd-url").value = settings.soldirini.url;
-    $("sd-teams").innerHTML = BASE.squadre.map(function (t) {
-      var on = settings.soldirini.squadre.indexOf(t.id) >= 0;
-      return '<button class="chip ' + t.club + (on ? " on" : "") + '" data-sd="' + t.id + '">' + esc(Logic.teamLabel(t)) + "</button>";
-    }).join("");
-    $("sd-teams").querySelectorAll("[data-sd]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var id = b.dataset.sd, l = settings.soldirini.squadre, i = l.indexOf(id);
-        if (i >= 0) l.splice(i, 1); else l.push(id);
-        saveSettings(); renderSoldiSettings();
-      });
-    });
-  }
-  $("sd-url").addEventListener("change", function () {
-    var v = $("sd-url").value.trim();
-    if (/^https:\/\//.test(v)) { settings.soldirini.url = v; saveSettings(); } else $("sd-url").value = settings.soldirini.url;
-  });
-
-  function soldiPayload() {
-    return Logic.soldiriniExport(DATA, $("sd-month").value, settings.soldirini.squadre);
-  }
-  function renderSoldiPreview() {
-    var ex = soldiPayload();
-    $("sd-msg").textContent = "";
-    $("sd-preview").innerHTML = ex.attivita.length ? ex.attivita.map(function (a) {
-      return '<div class="pz"><div>' + esc(Logic.dayLabel(a.data)) + "<br><small>" + (a.tipo === "allenamento" ? "Allenamento " + esc(a.squadra) : "Partita " + esc(a.squadra) + " vs " + esc(a.avversario)) +
-        " · " + a.da + "–" + a.a + (a.luogo ? " · " + esc(a.luogo) : "") + "</small></div></div>";
-    }).join("") : '<p class="empty">Nessuna attività nel mese per le squadre scelte in Impostazioni.</p>';
-    $("sd-open").disabled = !ex.attivita.length;
-    $("sd-copy").disabled = !ex.attivita.length;
-  }
-  function openSoldi() {
-    var n = new Date();
-    if (!$("sd-month").value) $("sd-month").value = n.getFullYear() + "-" + Logic.pad(n.getMonth() + 1);
-    renderSoldiPreview();
-    $("soldi-sheet").classList.add("open");
-    $("sheet-bg").classList.add("open");
-  }
-  function closeSoldi() { $("soldi-sheet").classList.remove("open"); $("sheet-bg").classList.remove("open"); }
-  $("btn-soldi").addEventListener("click", openSoldi);
-  $("sd-month").addEventListener("change", renderSoldiPreview);
-  $("sd-close").addEventListener("click", closeSoldi);
-  $("sd-open").addEventListener("click", function () {
-    var url = settings.soldirini.url.replace(/#.*$/, "");
-    url += (url.indexOf("?") >= 0 ? "&" : "?") + "importa=basket#dati=" + Logic.b64url(JSON.stringify(soldiPayload()));
-    openUrl(url);
-  });
-  $("sd-copy").addEventListener("click", function () {
-    var txt = "CALENDARI-BASKET:" + Logic.b64url(JSON.stringify(soldiPayload()));
-    if (A && A.copy) A.copy(txt); else if (navigator.clipboard) navigator.clipboard.writeText(txt);
-    $("sd-msg").textContent = "Dati copiati: in Soldirini usa «Incolla da Calendari Basket».";
   });
 
   // ---------- Impostazioni ----------
@@ -1017,7 +1019,7 @@
 
   rebuild();
   renderVersion();
-  renderChips(); renderAll(); renderPromemoria(); renderRitrovo(); renderPause(); renderSoldiSettings();
+  renderChips(); renderAll(); renderPromemoria(); renderRitrovo(); renderPause();
   renderNotifStatus(); renderCalSettings();
   reschedule();
   sync(true); // dopo un aggiornamento dell'app porta i nuovi dati nel calendario
