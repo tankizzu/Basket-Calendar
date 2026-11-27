@@ -31,17 +31,24 @@ jobs:
         run: gradle :app:assembleRelease --no-daemon
 
       - name: Rinomina APK
-        run: cp app/build/outputs/apk/release/app-release.apk CalendariBasket-v${{ github.run_number }}.apk
+        run: |
+          N=${{ github.run_number }}
+          cp app/build/outputs/apk/personale/release/app-personale-release.apk CalendariBasket-v$N.apk
+          cp app/build/outputs/apk/bulldogs/release/app-bulldogs-release.apk CalendariBulldogs-v$N.apk
+          cp app/build/outputs/apk/lions/release/app-lions-release.apk CalendariLions-v$N.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: CalendariBasket-v${{ github.run_number }}
-          path: CalendariBasket-v${{ github.run_number }}.apk
+          path: Calendari*-v${{ github.run_number }}.apk
 
       - name: Pubblica release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: Calendari Basket v${{ github.run_number }}
-          files: CalendariBasket-v${{ github.run_number }}.apk
+          files: |
+            CalendariBasket-v${{ github.run_number }}.apk
+            CalendariBulldogs-v${{ github.run_number }}.apk
+            CalendariLions-v${{ github.run_number }}.apk
           make_latest: true

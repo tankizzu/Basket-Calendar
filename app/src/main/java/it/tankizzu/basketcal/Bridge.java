@@ -196,7 +196,7 @@ public class Bridge {
     public String getIcon() {
         android.content.pm.PackageManager pm = activity.getPackageManager();
         for (int i = 1; i < ALIASES.length; i++) {
-            android.content.ComponentName cn = new android.content.ComponentName(activity, activity.getPackageName() + ALIASES[i]);
+            android.content.ComponentName cn = new android.content.ComponentName(activity, MainActivity.class.getPackage().getName() + ALIASES[i]);
             if (pm.getComponentEnabledSetting(cn) == android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED) return ICONS[i];
         }
         return "ball";
@@ -206,7 +206,7 @@ public class Bridge {
     public void setIcon(String icon) {
         android.content.pm.PackageManager pm = activity.getPackageManager();
         for (int i = 0; i < ALIASES.length; i++) {
-            android.content.ComponentName cn = new android.content.ComponentName(activity, activity.getPackageName() + ALIASES[i]);
+            android.content.ComponentName cn = new android.content.ComponentName(activity, MainActivity.class.getPackage().getName() + ALIASES[i]);
             int state = ICONS[i].equals(icon) ? android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                     : android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
             pm.setComponentEnabledSetting(cn, state, android.content.pm.PackageManager.DONT_KILL_APP);

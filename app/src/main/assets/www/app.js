@@ -4,10 +4,31 @@
   var DATA_URL = "https://raw.githubusercontent.com/" + REPO + "/main/app/src/main/assets/www/data.js";
   var RELEASE_URL = "https://api.github.com/repos/" + REPO + "/releases/latest";
   var BASE, TM, MIE;
+  var CFG = window.APP_CONFIG || { club: null, nome: "Calendari Basket", apk: "CalendariBasket" };
+  // Versione di un solo club: tiene solo le sue squadre e toglie i dati personali (ruoli, tabellini).
+  function perClub(b) {
+    if (!CFG.club) return b;
+    var keep = {};
+    var squadre = b.squadre.filter(function (t) { return t.club === CFG.club; }).map(function (t) {
+      keep[t.id] = true;
+      var c = JSON.parse(JSON.stringify(t));
+      c.mia = false; delete c.ruolo; delete c.nota; delete c.spentiDiDefault;
+      return c;
+    });
+    var out = {};
+    Object.keys(b).forEach(function (k) { out[k] = b[k]; });
+    out.squadre = squadre;
+    out.partite = b.partite.filter(function (g) { return keep[g.team]; }).map(function (g) {
+      var c = JSON.parse(JSON.stringify(g)); delete c.tabellino; return c;
+    });
+    out.allenamenti = (b.allenamenti || []).filter(function (r) { return keep[r.team]; });
+    return out;
+  }
   function setBase(b) {
-    BASE = b;
+    BASE = perClub(b);
     TM = Logic.teamMap(BASE);
-    MIE = BASE.squadre.filter(function (t) { return t.mia; }).map(function (t) { return t.id; });
+    MIE = CFG.club ? BASE.squadre.map(function (t) { return t.id; }) :
+      BASE.squadre.filter(function (t) { return t.mia; }).map(function (t) { return t.id; });
   }
   // Dati: quelli scaricati più di recente, se più nuovi di quelli inclusi nell'app.
   (function () {
@@ -926,7 +947,7 @@
 
   // ---------- Ritrovo e pause ----------
   function renderRitrovo() {
-    $("ritrovo-set").innerHTML = ["Bulldogs", "LIONS"].map(function (c) {
+    $("ritrovo-set").innerHTML = (CFG.club ? [CFG.club] : ["Bulldogs", "LIONS"]).map(function (c) {
       var r = settings.ritrovo[c];
       var opt = function (k) {
         return [0, 15, 20, 30, 45, 60, 75, 90, 120].map(function (m) {
@@ -1160,7 +1181,8 @@
       try {
         var r = JSON.parse(text);
         var n = parseInt(String(r.tag_name).replace(/\D/g, ""), 10);
-        var asset = (r.assets || []).filter(function (x) { return /\.apk$/.test(x.name); })[0];
+        var re = new RegExp("^" + CFG.apk + "-v\\d+\\.apk$");
+        var asset = (r.assets || []).filter(function (x) { return re.test(x.name); })[0];
         if (n > A.getVersionCode() && asset) {
           showBanner("Nuova versione v" + n + " dell'app", "Scarica", function () { openUrl(asset.browser_download_url); });
         }
@@ -1177,6 +1199,13 @@
   rebuild();
   renderVersion();
   if (["mie", "Bulldogs", "LIONS", "tutte"].indexOf(filtri.scope) >= 0) ui.scope = filtri.scope;
+  if (CFG.club) {
+    ui.scope = CFG.club;
+    document.body.classList.add("club-app");
+    $("app-title").textContent = CFG.nome;
+    $("sp-name").textContent = CFG.nome;
+    document.title = CFG.nome;
+  }
   if (typeof filtri.showPast === "boolean") ui.showPast = filtri.showPast;
   if (typeof filtri.showTrain === "boolean") ui.showTrain = filtri.showTrain;
   document.querySelectorAll("#scope button").forEach(function (x) { x.classList.toggle("on", x.dataset.scope === ui.scope); });

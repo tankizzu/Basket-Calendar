@@ -26,6 +26,26 @@ android {
         }
     }
 
+    // Tre app separate: la tua (personale) e una per ciascun club, da dare ad altri
+    flavorDimensions = ["versione"]
+    productFlavors {
+        personale {
+            dimension "versione"
+            applicationId 'it.tankizzu.basketcal'
+            resValue "string", "app_name", "Calendari Basket"
+        }
+        bulldogs {
+            dimension "versione"
+            applicationId 'it.tankizzu.basketcal.bulldogs'
+            resValue "string", "app_name", "Calendari Bulldogs"
+        }
+        lions {
+            dimension "versione"
+            applicationId 'it.tankizzu.basketcal.lions'
+            resValue "string", "app_name", "Calendari LIONS"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

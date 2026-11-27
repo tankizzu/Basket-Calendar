@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="splash" aria-hidden="true"><div class="sp-ball"></div><div class="sp-shadow"></div><div class="sp-name">Calendari Basket</div></div>
+<div id="splash" aria-hidden="true"><div class="sp-ball"></div><div class="sp-shadow"></div><div class="sp-name" id="sp-name">Calendari Basket</div></div>
 <header class="top">
-  <div class="brand"><span class="ball" aria-hidden="true"></span><img class="club-logo" id="club-logo" alt=""><h1>Calendari Basket <span>26/27</span></h1></div>
+  <div class="brand"><span class="ball" aria-hidden="true"></span><img class="club-logo" id="club-logo" alt=""><h1><span class="app-title" id="app-title">Calendari Basket</span> <span>26/27</span></h1></div>
 </header>
 <div class="banner" id="update-banner"></div>
 
@@ -55,9 +55,11 @@
   <!-- INCROCI -->
   <section id="view-incroci" class="view">
     <label class="check"><input type="checkbox" id="inc-past"> Includi date passate</label>
+    <div class="solo-personale">
     <h2>I miei impegni</h2>
     <p class="hint">Giorni con più gare delle tue squadre (U15 Bulldogs, U9, U12 e Senior LIONS).</p>
     <div id="inc-mie"></div>
+    </div>
     <h2>Bulldogs</h2>
     <p class="hint">Più squadre Bulldogs nello stesso giorno, anche in trasferta.</p>
     <div id="inc-bulldogs"></div>
@@ -119,12 +121,14 @@
       <div class="row"><button class="btn" id="pz-add">Aggiungi pausa</button></div>
     </div>
 
+    <div class="solo-personale">
     <h2>Icona dell'app</h2>
     <p class="hint">Dopo il cambio, alcuni telefoni tolgono l'icona dalla schermata Home: la ritrovi nell'elenco delle app.</p>
     <div class="icon-pick" id="icon-pick">
       <button data-icon="ball"><span class="ic ic-ball"></span>Pallone</button>
       <button data-icon="bulldogs"><img src="img/bulldogs.png" alt="">Bulldogs</button>
       <button data-icon="lions"><img src="img/lions.png" alt="">LIONS</button>
+    </div>
     </div>
 
     <h2>Promemoria</h2>
@@ -288,6 +292,7 @@
   <button data-view="impostazioni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Impost.</span></button>
 </nav>
 
+<script src="config.js"></script>
 <script src="data.js"></script>
 <script src="logos.js"></script>
 <script src="fx.js"></script>
