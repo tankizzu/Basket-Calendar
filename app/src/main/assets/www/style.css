@@ -96,3 +96,5 @@ h2{font-size:15px;margin:20px 4px 4px}
 .banner{display:none;background:#15171a;color:#fff;padding:10px 16px;font-size:14px;align-items:center;justify-content:space-between;gap:10px}
 .banner.show{display:flex}
 .banner .btn{background:#fff;color:#15171a;padding:6px 12px;font-size:13px;white-space:nowrap}
+.dot.all{background:#9aa1ab}
+.form input[type=time]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px}

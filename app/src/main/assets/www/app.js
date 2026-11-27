@@ -126,7 +126,8 @@
   // ---------- Scheda partita ----------
   function badges(g) {
     var b = [];
-    b.push(g.casa ? '<span class="badge casa">Casa</span>' : '<span class="badge">Trasferta</span>');
+    if (Logic.isTraining(g)) b.push('<span class="badge">Allenamento</span>');
+    else b.push(g.casa ? '<span class="badge casa">Casa</span>' : '<span class="badge">Trasferta</span>');
     if (g.stato === "annullata") b.push('<span class="badge annullata">Annullata</span>');
     if (g.stato === "recupero") b.push('<span class="badge recupero">Recupero</span>');
     if (g.aggiunta) b.push('<span class="badge mod">Aggiunta da te</span>');
@@ -207,7 +208,7 @@
   }
 
   function dayFlag(partite) {
-    var active = partite.filter(Logic.isActive);
+    var active = partite.filter(function (g) { return Logic.isActive(g) && !Logic.isTraining(g); });
     if (ui.scope === "mie") return active.length > 1 ? active.length : 0;
     var clubs = {};
     active.forEach(function (g) { clubs[TM[g.team].club] = (clubs[TM[g.team].club] || 0) + 1; });
@@ -244,7 +245,7 @@
         var gs = byDay[d.iso] || [];
         var f = gs.length ? dayFlag(gs) : 0;
         var dots = gs.filter(Logic.isActive).slice(0, 4).map(function (g) {
-          return '<span class="dot ' + TM[g.team].club + '"></span>';
+          return '<span class="dot ' + (Logic.isTraining(g) ? "all" : TM[g.team].club) + '"></span>';
         }).join("");
         var cls = "c" + (d.fuori ? " out" : "") + (d.iso === today ? " today" : "") +
           (d.iso === ui.selDay ? " sel" : "") + (f ? " multi" : "");
@@ -298,6 +299,16 @@
     $("inc-mie").innerHTML = incBlock(Logic.overlaps(DATA, function (g) { return MIE.indexOf(g.team) >= 0; }, o));
     $("inc-bulldogs").innerHTML = incBlock(Logic.overlaps(DATA, function (g) { return TM[g.team].club === "Bulldogs"; }, o));
     $("inc-lions").innerHTML = incBlock(Logic.overlaps(DATA, function (g) { return TM[g.team].club === "LIONS"; }, o));
+    var tc = Logic.trainingConflicts(DATA, function (g) { return MIE.indexOf(g.team) >= 0 || TM[g.team].club === "Bulldogs"; }, o);
+    $("inc-all").innerHTML = tc.length ? tc.map(function (c) {
+      var t = c.allenamento;
+      return '<div class="card inc"><div class="d">' + esc(Logic.dayLabel(c.data)) + "</div>" +
+        '<div class="l"><b>' + esc(t.ora) + "</b> Allenamento Bulldogs fino alle " + esc(t.oraFine) + " · " + esc(t.sede) + "</div>" +
+        c.partite.map(function (g) {
+          return '<div class="l"><b>' + esc(g.ora) + "</b> " + esc(Logic.teamLabel(TM[g.team])) + ": " + esc(Logic.matchTitle(g)) +
+            " · " + (g.casa ? "casa" : "trasferta") + (g.sede ? " · " + esc(g.sede) : "") + "</div>";
+        }).join("") + "</div>";
+    }).join("") : '<p class="empty">Nessun conflitto.</p>';
     var v = Logic.checkU15Weekend(DATA);
     $("vincolo").innerHTML = v.length ? v.map(function (r) {
       var g = r.partita;
@@ -325,7 +336,7 @@
       p.gare.forEach(function (g) { teams[Logic.teamLabel(TM[g.team])] = 1; });
       var next = p.gare.filter(function (g) { return !Logic.isPast(g, now); })[0];
       return '<div class="card place"><div class="n">' + esc(s) + "</div>" +
-        '<div class="m">' + esc(Object.keys(teams).join(", ")) + " · " + p.gare.length + (p.gare.length === 1 ? " gara" : " gare") + "</div>" +
+        '<div class="m">' + esc(Object.keys(teams).join(", ")) + " · " + p.gare.length + (p.gare.length === 1 ? " impegno" : " impegni") + "</div>" +
         '<div class="m">' + (next ? "Prossima: " + esc(Logic.dayLabel(next.data)) + " ore " + esc(next.ora) + " · " + esc(Logic.matchTitle(next)) : "Nessuna gara futura") + "</div>" +
         '<div class="actions"><button class="btn ghost" data-map="' + esc(s) + '">Mappa</button></div></div>';
     }).join("") : '<p class="empty">Nessuna sede per i filtri scelti.</p>';
@@ -379,6 +390,8 @@
       $("ed-team").value = first;
       $("ed-data").value = ui.selDay || "";
       $("ed-ora").value = "";
+      $("ed-fine").value = "";
+      setTrainingMode(false);
       $("ed-casa").value = "1";
       $("ed-avv").value = "";
       $("ed-sede").value = "";
@@ -388,6 +401,8 @@
       var g = findGame(id);
       $("ed-data").value = g.data;
       $("ed-ora").value = g.ora;
+      $("ed-fine").value = g.oraFine || "";
+      setTrainingMode(Logic.isTraining(g));
       $("ed-casa").value = g.casa ? "1" : "0";
       $("ed-avv").value = g.casa ? g.squadraOspite : g.squadraCasa;
       $("ed-sede").value = g.sedeDaImpostazioni ? "" : (g.sede || "");
@@ -396,6 +411,13 @@
     }
     $("sheet").classList.add("open");
     $("sheet-bg").classList.add("open");
+  }
+
+  function setTrainingMode(on) {
+    $("ed-fine-wrap").style.display = on ? "" : "none";
+    $("ed-casa-wrap").style.display = on ? "none" : "";
+    $("ed-avv-wrap").style.display = on ? "none" : "";
+    if (on) $("ed-title").textContent = "Modifica allenamento";
   }
 
   function closeEditor() {
@@ -409,12 +431,16 @@
   $("sheet-bg").addEventListener("click", closeEditor);
 
   $("ed-save").addEventListener("click", function () {
+    var cur = ui.editId ? findGame(ui.editId) : null;
+    var tr = cur && Logic.isTraining(cur);
     var f = {
-      data: $("ed-data").value, ora: $("ed-ora").value, casa: $("ed-casa").value === "1",
+      data: $("ed-data").value, ora: $("ed-ora").value, oraFine: $("ed-fine").value, casa: $("ed-casa").value === "1",
       avversario: $("ed-avv").value.trim(), sede: $("ed-sede").value.trim(),
       stato: $("ed-stato").value, note: $("ed-note").value.trim()
     };
-    if (!f.data || !f.ora || !f.avversario) { $("ed-err").textContent = "Servono data, ora e avversario."; return; }
+    if (tr) {
+      if (!f.data || !f.ora || !f.oraFine) { $("ed-err").textContent = "Servono data, ora di inizio e di fine."; return; }
+    } else if (!f.data || !f.ora || !f.avversario) { $("ed-err").textContent = "Servono data, ora e avversario."; return; }
     if (!ui.editId) {
       var team = $("ed-team").value;
       edits.add.push(Logic.newGame(team, TM[team].club, f));
@@ -422,9 +448,13 @@
       var g = findGame(ui.editId);
       var ch = {};
       if (f.data !== g.data || f.ora !== g.ora) { ch.data = f.data; ch.ora = f.ora; }
-      if (f.casa !== g.casa) ch.casa = f.casa;
-      var avvOld = g.casa ? g.squadraOspite : g.squadraCasa;
-      if (f.avversario !== avvOld || ch.casa !== undefined) ch.avversario = f.avversario;
+      if (tr) {
+        if (f.oraFine !== g.oraFine) ch.oraFine = f.oraFine;
+      } else {
+        if (f.casa !== g.casa) ch.casa = f.casa;
+        var avvOld = g.casa ? g.squadraOspite : g.squadraCasa;
+        if (f.avversario !== avvOld || ch.casa !== undefined) ch.avversario = f.avversario;
+      }
       var sedeOld = g.sedeDaImpostazioni ? "" : (g.sede || "");
       if (f.sede !== sedeOld) ch.sede = f.sede;
       if (f.stato !== g.stato) ch.stato = f.stato;

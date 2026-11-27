@@ -41,7 +41,7 @@
       <button class="btn ghost" id="m-next" aria-label="Mese successivo">›</button>
     </div>
     <div class="cal" id="cal-grid"></div>
-    <div class="legend"><span class="dot Bulldogs"></span> Bulldogs <span class="dot LIONS"></span> LIONS <span class="dot more"></span> 2+ gare</div>
+    <div class="legend"><span class="dot Bulldogs"></span> Bulldogs <span class="dot LIONS"></span> LIONS <span class="dot all"></span> Allenamento <span class="dot more"></span> 2+ gare</div>
     <div id="cal-day"></div>
   </section>
 
@@ -57,6 +57,9 @@
     <h2>LIONS</h2>
     <p class="hint">Più squadre LIONS nello stesso giorno, anche in trasferta.</p>
     <div id="inc-lions"></div>
+    <h2>Allenamenti in conflitto</h2>
+    <p class="hint">Allenamenti Bulldogs nella stessa fascia oraria di una gara Bulldogs o di una tua squadra.</p>
+    <div id="inc-all"></div>
     <h2>Vincolo U15 in casa nel weekend</h2>
     <p class="hint">Ammessa solo se nella stessa data gioca anche l'Aquilotti.</p>
     <div id="vincolo"></div>
@@ -137,10 +140,11 @@
       <label>Data <input type="date" id="ed-data"></label>
       <label>Ora <input type="time" id="ed-ora"></label>
     </div>
-    <label>Casa / trasferta
+    <label id="ed-fine-wrap">Fine <input type="time" id="ed-fine"></label>
+    <label id="ed-casa-wrap">Casa / trasferta
       <select id="ed-casa"><option value="1">In casa</option><option value="0">In trasferta</option></select>
     </label>
-    <label>Avversario <input type="text" id="ed-avv"></label>
+    <label id="ed-avv-wrap">Avversario <input type="text" id="ed-avv"></label>
     <label>Sede (palestra e indirizzo) <input type="text" id="ed-sede"></label>
     <label>Stato
       <select id="ed-stato">

@@ -48,7 +48,7 @@ var Logic = (function () {
     var now = opts.now || new Date();
     var byDay = {};
     data.partite.forEach(function (g) {
-      if (!isActive(g) || !filterFn(g)) return;
+      if (!isActive(g) || isTraining(g) || !filterFn(g)) return;
       if (!opts.includePast && isPast(g, now)) return;
       (byDay[g.data] = byDay[g.data] || []).push(g);
     });
@@ -73,7 +73,32 @@ var Logic = (function () {
     });
   }
 
-  function matchTitle(g) { return g.squadraCasa + " – " + g.squadraOspite; }
+  function matchTitle(g) {
+    if (isTraining(g)) return "Allenamento " + g.ora + "–" + g.oraFine;
+    return g.squadraCasa + " – " + g.squadraOspite;
+  }
+
+  function minutes(hhmm) { var p = hhmm.split(":").map(Number); return p[0] * 60 + p[1]; }
+
+  // Allenamenti che si sovrappongono a una gara nello stesso giorno (gara considerata di 2 ore).
+  function trainingConflicts(data, filterFn, opts) {
+    opts = opts || {};
+    var now = opts.now || new Date();
+    var games = data.partite.filter(function (g) { return isActive(g) && !isTraining(g) && filterFn(g); });
+    var out = [];
+    data.partite.forEach(function (t) {
+      if (!isTraining(t) || !isActive(t)) return;
+      if (!opts.includePast && isPast(t, now)) return;
+      var a = minutes(t.ora), b = minutes(t.oraFine);
+      var hit = games.filter(function (g) {
+        if (g.data !== t.data) return false;
+        var s = minutes(g.ora);
+        return s < b && s + 120 > a;
+      });
+      if (hit.length) out.push({ data: t.data, allenamento: t, partite: hit });
+    });
+    return out;
+  }
 
   function pad(n) { return (n < 10 ? "0" : "") + n; }
 
@@ -87,12 +112,12 @@ var Logic = (function () {
       if (!ts || !ts.notifiche || !isActive(g)) return;
       var t = tm[g.team];
       var start = toDate(g.data, g.ora);
-      var where = g.casa ? "in casa" : "trasferta";
+      var where = isTraining(g) ? "allenamento" : (g.casa ? "in casa" : "trasferta");
       var conf = g.verifica === "utente" ? " · da confermare" : "";
       var when = dayLabel(g.data) + " ore " + g.ora;
 
       var orgDays = settings.orgGiorni;
-      if (orgDays > 0) {
+      if (orgDays > 0 && !isTraining(g)) {
         var hm = (settings.orgOra || "09:00").split(":").map(Number);
         var org = toDate(g.data, "00:00");
         org.setDate(org.getDate() - orgDays);
@@ -113,8 +138,8 @@ var Logic = (function () {
           out.push({
             id: g.id + ":pre",
             at: pre.getTime(),
-            titolo: teamLabel(t) + " alle " + g.ora,
-            testo: matchTitle(g) + " · " + where + (g.sede ? " · " + g.sede : "") + conf
+            titolo: (isTraining(g) ? "Allenamento Bulldogs" : teamLabel(t)) + " alle " + g.ora,
+            testo: (isTraining(g) ? g.ora + "–" + g.oraFine : matchTitle(g) + " · " + where) + (g.sede ? " · " + g.sede : "") + conf
           });
         }
       }
@@ -133,6 +158,13 @@ var Logic = (function () {
     }).map(function (g) {
       var t = tm[g.team];
       var start = toDate(g.data, g.ora).getTime();
+      if (isTraining(g)) {
+        return {
+          id: g.id, titolo: "[Allenamento BD] " + g.ora + "–" + g.oraFine, luogo: g.sede || "",
+          descrizione: [g.noteUtente || "", g.fonte].filter(Boolean).join("\n"),
+          inizio: start, fine: toDate(g.data, g.oraFine).getTime()
+        };
+      }
       var desc = [
         teamLabel(t) + " · " + t.campionato,
         g.casa ? "In casa" : "Trasferta",
@@ -157,7 +189,8 @@ var Logic = (function () {
   function defaultSettings(data) {
     var s = { orgGiorni: 12, orgOra: "09:00", preOre: 3, calendarId: "", squadre: {}, sedeCasa: {} };
     data.squadre.forEach(function (t) {
-      s.squadre[t.id] = { notifiche: !!t.mia, calendar: !!t.mia };
+      var on = !!t.mia && !t.spentiDiDefault;
+      s.squadre[t.id] = { notifiche: on, calendar: on };
     });
     return s;
   }
@@ -178,6 +211,30 @@ var Logic = (function () {
     return s;
   }
 
+  function isTraining(g) { return g.tipo === "allenamento"; }
+
+  // Allenamenti: regole settimanali espanse in singole sedute (fino a 120 giorni avanti se non c'è una data di fine).
+  function expandTrainings(base, now) {
+    now = now || new Date();
+    var out = [];
+    var horizon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 120);
+    (base.allenamenti || []).forEach(function (r) {
+      var d = toDate(r.dal);
+      var end = r.al ? toDate(r.al) : horizon;
+      if (end > horizon) end = horizon;
+      while (d.getDay() !== r.giorno) d.setDate(d.getDate() + 1);
+      for (; d <= end; d.setDate(d.getDate() + 7)) {
+        var iso = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+        out.push({
+          id: r.id + "-" + iso, team: r.team, tipo: "allenamento", giornata: "", data: iso, ora: r.inizio, oraFine: r.fine,
+          casa: true, squadraCasa: "", squadraOspite: "", sede: r.sede, stato: "programmata", verifica: "ufficiale",
+          fonte: "Orario allenamenti indicato da te", note: "", storico: [], collegata: null
+        });
+      }
+    });
+    return out;
+  }
+
   function fmtDM(dateStr) { var p = dateStr.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
 
   /*
@@ -191,13 +248,14 @@ var Logic = (function () {
     sedeCasa = sedeCasa || {};
     var tm = teamMap(base);
     var out = [];
-    base.partite.concat(add).forEach(function (g0) {
+    base.partite.concat(expandTrainings(base, new Date())).concat(add).forEach(function (g0) {
       if (del.indexOf(g0.id) >= 0) return;
       var g = JSON.parse(JSON.stringify(g0));
       var m = mod[g.id];
       if (m) {
         var changed = [];
         if (m.data && (m.data !== g.data || m.ora !== g.ora)) changed.push("data/ora " + fmtDM(g.data) + " " + g.ora);
+        if (m.oraFine && m.oraFine !== g.oraFine) changed.push("fine " + g.oraFine);
         if (m.sede !== undefined && m.sede !== g.sede) changed.push("sede " + (g.sede || "non indicata"));
         if (m.stato && m.stato !== g.stato) changed.push("stato " + g.stato);
         if (m.casa !== undefined && m.casa !== g.casa) changed.push(g.casa ? "in casa" : "in trasferta");
@@ -206,12 +264,14 @@ var Logic = (function () {
         if (changed.length && !g0.aggiunta) {
           g.storico = (g.storico || []).concat([{ testo: "Valori originali (" + g.fonte + "): " + changed.join(", ") }]);
         }
-        ["data", "ora", "sede", "stato"].forEach(function (k) { if (m[k] !== undefined) g[k] = m[k]; });
+        ["data", "ora", "oraFine", "sede", "stato"].forEach(function (k) { if (m[k] !== undefined) g[k] = m[k]; });
         if (m.casa !== undefined) g.casa = m.casa;
-        var avv = m.avversario || avvOld;
-        var me = tm[g.team].club;
-        g.squadraCasa = g.casa ? me : avv;
-        g.squadraOspite = g.casa ? avv : me;
+        if (!isTraining(g)) {
+          var avv = m.avversario || avvOld;
+          var me = tm[g.team].club;
+          g.squadraCasa = g.casa ? me : avv;
+          g.squadraOspite = g.casa ? avv : me;
+        }
         if (m.note !== undefined) g.noteUtente = m.note;
         if (!g0.aggiunta) {
           g.verifica = "utente";
@@ -262,7 +322,7 @@ var Logic = (function () {
   }
 
   return {
-    applyEdits: applyEdits, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
+    applyEdits: applyEdits, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
     teamMap: teamMap, toDate: toDate, dayLabel: dayLabel, shortDate: shortDate, teamLabel: teamLabel,
     isActive: isActive, isPast: isPast, overlaps: overlaps, checkU15Weekend: checkU15Weekend,
     matchTitle: matchTitle, buildReminders: buildReminders, buildCalendarEvents: buildCalendarEvents,

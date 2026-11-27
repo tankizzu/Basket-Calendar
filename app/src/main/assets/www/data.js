@@ -1,6 +1,38 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 1,
+ "rev": 2,
+ "allenamenti": [
+  {
+   "id": "bd-all-lun",
+   "team": "bd-all",
+   "giorno": 1,
+   "inizio": "17:30",
+   "fine": "19:00",
+   "sede": "Piazzi - Morlupo",
+   "dal": "2026-11-27",
+   "al": null
+  },
+  {
+   "id": "bd-all-mer",
+   "team": "bd-all",
+   "giorno": 3,
+   "inizio": "19:00",
+   "fine": "20:00",
+   "sede": "Palestra Nervi - Via Falisca, snc, Rignano Flaminio",
+   "dal": "2026-11-27",
+   "al": null
+  },
+  {
+   "id": "bd-all-ven",
+   "team": "bd-all",
+   "giorno": 5,
+   "inizio": "18:30",
+   "fine": "20:00",
+   "sede": "Palestra Nervi - Via Falisca, snc, Rignano Flaminio",
+   "dal": "2026-11-27",
+   "al": null
+  }
+ ],
  "fuso": "Europe/Rome",
  "squadre": [
   {
@@ -26,6 +58,15 @@ window.BASKET_DATA = {
    "campionato": "Esordienti Bronze · Girone C",
    "ruolo": null,
    "mia": false
+  },
+  {
+   "id": "bd-all",
+   "club": "Bulldogs",
+   "nome": "Allenamenti",
+   "campionato": "Allenamenti settimanali",
+   "ruolo": null,
+   "mia": true,
+   "spentiDiDefault": true
   },
   {
    "id": "li-sen",
