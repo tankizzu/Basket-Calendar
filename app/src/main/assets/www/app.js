@@ -992,6 +992,32 @@
     saveSettings(); renderAll(); renderPause(); sync(true);
   });
 
+  // ---------- Tema chiaro/scuro ----------
+  function currentTheme() {
+    var t = (A && A.getStore ? A.getStore("tema") : "") || (function () { try { return localStorage.getItem("tema"); } catch (e) { return ""; } })() || "auto";
+    return ["auto", "light", "dark"].indexOf(t) >= 0 ? t : "auto";
+  }
+  function applyTheme(t) {
+    if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+    try { localStorage.setItem("tema", t); } catch (e) {}
+    var dark = t === "dark" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+    if (A && A.setBars) { try { A.setBars(dark); } catch (e) {} }
+    document.querySelectorAll("#theme-pick button").forEach(function (b) { b.classList.toggle("on", b.dataset.theme === t); });
+  }
+  document.querySelectorAll("#theme-pick button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (A && A.setStore) A.setStore("tema", b.dataset.theme);
+      applyTheme(b.dataset.theme);
+      FX.vibrate(10);
+    });
+  });
+  applyTheme(currentTheme());
+  if (window.matchMedia) {
+    var mq = matchMedia("(prefers-color-scheme: dark)");
+    var onMq = function () { if (currentTheme() === "auto") applyTheme("auto"); };
+    if (mq.addEventListener) mq.addEventListener("change", onMq); else if (mq.addListener) mq.addListener(onMq);
+  }
+
   // ---------- Icona dell'app ----------
   function renderIcon() {
     var cur = A && A.getIcon ? A.getIcon() : "ball";

@@ -6,6 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <title>Calendari Basket</title>
 <link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem("tema");if(t&&t!=="auto")document.documentElement.dataset.theme=t;}catch(e){}</script>
 </head>
 <body>
 <div id="splash" aria-hidden="true"><div class="sp-ball"></div><div class="sp-shadow"></div><div class="sp-name" id="sp-name">Calendari Basket</div></div>
@@ -91,6 +92,13 @@
 
   <!-- IMPOSTAZIONI -->
   <section id="view-impostazioni" class="view">
+    <h2>Aspetto</h2>
+    <div class="theme-pick" id="theme-pick">
+      <button data-theme="auto"><span class="sw auto"></span>Automatico</button>
+      <button data-theme="light"><span class="sw light"></span>Chiaro</button>
+      <button data-theme="dark"><span class="sw dark"></span>Scuro</button>
+    </div>
+
     <div class="solo-web" id="web-cal">
     <h2>Calendario dell'iPhone</h2>
     <p class="hint">Tocca un calendario per abbonarti: le partite entrano nel Calendario dell'iPhone, con un avviso 3 ore prima, e si aggiornano da sole quando cambiano.</p>

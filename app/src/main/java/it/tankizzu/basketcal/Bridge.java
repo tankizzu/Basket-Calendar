@@ -213,6 +213,22 @@ public class Bridge {
         }
     }
 
+    /** Colore delle barre di sistema secondo il tema dell'app. */
+    @JavascriptInterface
+    public void setBars(boolean dark) {
+        activity.runOnUiThread(() -> {
+            android.view.Window w = activity.getWindow();
+            int bg = dark ? 0xFF0F1115 : 0xFFF3F4F6;
+            w.setStatusBarColor(bg);
+            w.setNavigationBarColor(dark ? 0xFF181B21 : 0xFFFFFFFF);
+            android.view.View v = w.getDecorView();
+            int f = v.getSystemUiVisibility();
+            if (dark) f &= ~(android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+            else f |= android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | android.view.View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+            v.setSystemUiVisibility(f);
+        });
+    }
+
     @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }
