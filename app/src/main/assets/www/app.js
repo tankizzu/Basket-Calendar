@@ -528,7 +528,6 @@
     $("rs-osp").value = r.ospite != null ? r.ospite : "";
     $("rs-parz").value = r.parziali ? Logic.parzialiText(r) : "";
     $("rs-err").textContent = "";
-    $("rs-info").textContent = "";
     renderResultPhotos();
     $("result-sheet").classList.add("open");
     $("sheet-bg").classList.add("open");
@@ -542,14 +541,10 @@
     var list = edits.foto[resId] || [];
     $("rs-photos").innerHTML = list.length ? list.map(function (n) {
       return '<div class="ph"><img data-photo="' + esc(n) + '" src="' + esc(photoSrc(n)) + '" alt="Referto">' +
-        '<button class="btn" data-an="' + esc(n) + '">Analizza</button>' +
         '<button class="btn ghost" data-del="' + esc(n) + '">Togli</button></div>';
     }).join("") : '<p class="empty">Nessuna foto.</p>';
     $("rs-photos").querySelectorAll("img").forEach(function (im) {
       im.addEventListener("click", function () { showPhoto(im.dataset.photo); });
-    });
-    $("rs-photos").querySelectorAll("[data-an]").forEach(function (b) {
-      b.addEventListener("click", function () { analyze(b.dataset.an); });
     });
     $("rs-photos").querySelectorAll("[data-del]").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -571,42 +566,15 @@
     edits.foto[gameId] = (edits.foto[gameId] || []).concat([name]);
     storeJSON("edits", edits);
     rebuild(); renderAll();
-    if (resId === gameId) {
-      renderResultPhotos();
-      if (A && A.hasApiKey && A.hasApiKey()) analyze(name);
-    }
+    if (resId === gameId) renderResultPhotos();
   };
-
-  function analyze(name) {
-    if (!A || !A.analyzePhoto) return;
-    if (!A.hasApiKey()) { $("rs-info").textContent = "Per leggere i referti inserisci la chiave Mistral in Impostazioni."; return; }
-    var gid = resId;
-    $("rs-info").textContent = "Sto leggendo il referto…";
-    $("rs-err").textContent = "";
-    var id = "an" + Date.now();
-    fetchCbs[id] = function (ok, text) {
-      if (resId !== gid) return;
-      var r;
-      try { r = JSON.parse(text); } catch (e) { r = { ok: false, errore: "risposta non valida" }; }
-      if (!r.ok) { $("rs-info").textContent = ""; $("rs-err").textContent = "Analisi non riuscita: " + r.errore; return; }
-      var g = findGame(gid);
-      var m = Logic.mapReferto(r.dati, g, TM[g.team]);
-      if (m.casa !== null) $("rs-casa").value = m.casa;
-      if (m.ospite !== null) $("rs-osp").value = m.ospite;
-      if (m.parziali.length) $("rs-parz").value = Logic.parzialiText(m);
-      $("rs-info").textContent = "Dati letti dal referto: controllali e premi Salva risultato." +
-        (r.dati.gara ? " Gara n. " + r.dati.gara + "." : "");
-      $("rs-err").textContent = m.avvisi.join(" ");
-    };
-    A.analyzePhoto(name, id);
-  }
   $("rs-save").addEventListener("click", function () {
     var c = $("rs-casa").value.trim(), o = $("rs-osp").value.trim();
     if ((c === "") !== (o === "")) { $("rs-err").textContent = "Inserisci entrambi i punteggi."; return; }
     if (c === "") delete edits.ris[resId];
     else {
       var parz = Logic.parseParziali($("rs-parz").value);
-      edits.ris[resId] = { casa: +c, ospite: +o, parziali: parz, fonte: "Inserito da te (verificato sul referto)" };
+      edits.ris[resId] = { casa: +c, ospite: +o, parziali: parz, fonte: "Inserito da te" };
     }
     closeResult();
     saveEdits();
@@ -737,18 +705,6 @@
   }
   $("btn-restore-del").addEventListener("click", function () { edits.del = []; saveEdits(); });
 
-  // ---------- Lettura referti ----------
-  function renderAiStatus() {
-    if (!A || !A.hasApiKey) { $("ai-status").textContent = "Disponibile nell'app sul telefono."; return; }
-    $("ai-status").innerHTML = A.hasApiKey() ? '<span class="ok">Chiave salvata: lettura automatica attiva</span>' : "Nessuna chiave salvata.";
-  }
-  $("ai-save").addEventListener("click", function () {
-    if (!A) return;
-    A.setApiKey($("ai-key").value);
-    $("ai-key").value = "";
-    renderAiStatus();
-  });
-
   // ---------- Google Calendar ----------
   function setSync(msg) { $("sync-status").textContent = msg; }
 
@@ -865,7 +821,7 @@
   rebuild();
   renderVersion();
   renderChips(); renderAll(); renderPromemoria();
-  renderNotifStatus(); renderCalSettings(); renderAiStatus();
+  renderNotifStatus(); renderCalSettings();
   reschedule();
   sync(true); // dopo un aggiornamento dell'app porta i nuovi dati nel calendario
   checkData();
