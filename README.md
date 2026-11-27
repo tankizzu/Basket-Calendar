@@ -11,3 +11,7 @@ Ogni push su `main` compila l'app su GitHub Actions e pubblica l'APK nella pagin
 
 ## Aggiornare le partite
 I dati sono in `app/src/main/assets/www/data.js`.
+
+## Aggiornamenti
+- **Partite:** l'app all'apertura scarica `data.js` da `main`. Se il campo `rev` è più alto di quello che ha, aggiorna le gare senza reinstallare. Ogni modifica ai dati deve aumentare `rev`.
+- **App:** l'app controlla l'ultima Release e, se c'è una versione nuova, mostra un avviso con il tasto per scaricarla.

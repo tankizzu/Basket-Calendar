@@ -1,5 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
+ "rev": 1,
  "fuso": "Europe/Rome",
  "squadre": [
   {

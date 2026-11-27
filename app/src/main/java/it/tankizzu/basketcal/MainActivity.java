@@ -39,6 +39,10 @@ public class MainActivity extends Activity {
         if (web != null) web.evaluateJavascript("window.onNativePermission && window.onNativePermission()", null);
     }
 
+    void runJs(String js) {
+        runOnUiThread(() -> { if (web != null) web.evaluateJavascript(js, null); });
+    }
+
     @Override
     public void onBackPressed() {
         if (web != null && web.canGoBack()) web.goBack();

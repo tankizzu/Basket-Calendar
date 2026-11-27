@@ -1,8 +1,20 @@
 (function () {
-  var BASE = window.BASKET_DATA;
-  var TM = Logic.teamMap(BASE);
   var A = window.Android || null; // ponte nativo (assente nell'anteprima da browser)
-  var MIE = BASE.squadre.filter(function (t) { return t.mia; }).map(function (t) { return t.id; });
+  var REPO = "tankizzu/Basket-Calendar";
+  var DATA_URL = "https://raw.githubusercontent.com/" + REPO + "/main/app/src/main/assets/www/data.js";
+  var RELEASE_URL = "https://api.github.com/repos/" + REPO + "/releases/latest";
+  var BASE, TM, MIE;
+  function setBase(b) {
+    BASE = b;
+    TM = Logic.teamMap(BASE);
+    MIE = BASE.squadre.filter(function (t) { return t.mia; }).map(function (t) { return t.id; });
+  }
+  // Dati: quelli scaricati più di recente, se più nuovi di quelli inclusi nell'app.
+  (function () {
+    var bundled = window.BASKET_DATA, cached = null;
+    try { cached = JSON.parse((A ? A.getStore("remoteData") : localStorage.getItem("remoteData")) || "null"); } catch (e) {}
+    setBase(cached && (cached.rev || 0) > (bundled.rev || 0) ? cached : bundled);
+  })();
   var MESI = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
 
   var settings = Logic.mergeSettings(BASE, loadJSON("settings"));
@@ -560,7 +572,11 @@
 
   // Richiamate dal codice Android.
   window.onNativePermission = function () { renderNotifStatus(); renderCalSettings(); reschedule(); };
-  window.onNativeResume = function () { renderNotifStatus(); renderCalSettings(); };
+  var lastCheck = Date.now();
+  window.onNativeResume = function () {
+    renderNotifStatus(); renderCalSettings();
+    if (Date.now() - lastCheck > 3600000) { lastCheck = Date.now(); checkData(); checkApp(); }
+  };
 
   // ---------- Avvio ----------
   function renderFiltered() { renderList(); renderCalendar(); renderLuoghi(); }
@@ -568,11 +584,68 @@
     renderFiltered(); renderIncroci(); renderTeamSettings(); renderSedeCasa(); renderEditsStatus();
   }
 
+  // ---------- Aggiornamenti automatici ----------
+  var fetchCbs = {};
+  window.__fetchCb = function (id, ok, text) { var f = fetchCbs[id]; delete fetchCbs[id]; if (f) f(ok, text); };
+  function fetchText(url, cb) {
+    if (!A || !A.fetchAsync) return;
+    var id = "f" + Date.now() + Math.random().toString(36).slice(2);
+    fetchCbs[id] = cb;
+    A.fetchAsync(url, id);
+  }
+
+  function showBanner(html, btnText, onClick) {
+    var b = $("update-banner");
+    b.innerHTML = "<span>" + html + "</span>" + (btnText ? '<button class="btn" id="banner-btn">' + esc(btnText) + "</button>" : "");
+    b.classList.add("show");
+    if (btnText) $("banner-btn").addEventListener("click", onClick);
+    else setTimeout(function () { b.classList.remove("show"); }, 5000);
+  }
+
+  function checkData() {
+    fetchText(DATA_URL + "?t=" + Date.now(), function (ok, text) {
+      if (!ok) return;
+      var json;
+      try { json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return; }
+      if (!json.partite || !json.squadre || (json.rev || 0) <= (BASE.rev || 0)) return;
+      storeJSON("remoteData", json);
+      setBase(json);
+      settings = Logic.mergeSettings(BASE, settings);
+      storeJSON("settings", settings);
+      rebuild();
+      renderChips(); renderAll(); renderVersion();
+      reschedule();
+      sync(true);
+      showBanner("Partite aggiornate (" + BASE.partite.length + " gare).");
+    });
+  }
+
+  function checkApp() {
+    fetchText(RELEASE_URL, function (ok, text) {
+      if (!ok) return;
+      try {
+        var r = JSON.parse(text);
+        var n = parseInt(String(r.tag_name).replace(/\D/g, ""), 10);
+        var asset = (r.assets || []).filter(function (x) { return /\.apk$/.test(x.name); })[0];
+        if (n > A.getVersionCode() && asset) {
+          showBanner("Nuova versione v" + n + " dell'app", "Scarica", function () { openUrl(asset.browser_download_url); });
+        }
+      } catch (e) {}
+    });
+  }
+
+  function renderVersion() {
+    $("data-version").textContent = "Dati aggiornati al " + BASE.versione.split("-").reverse().join("/") +
+      " (rev. " + (BASE.rev || 0) + ") · " + BASE.partite.length + " partite" +
+      (A ? " · app v" + A.getVersionCode() : "");
+  }
+
   rebuild();
-  $("data-version").textContent = "Dati del pacchetto aggiornati al " + BASE.versione.split("-").reverse().join("/") +
-    " · " + BASE.partite.length + " partite";
+  renderVersion();
   renderChips(); renderAll(); renderPromemoria();
   renderNotifStatus(); renderCalSettings();
   reschedule();
   sync(true); // dopo un aggiornamento dell'app porta i nuovi dati nel calendario
+  checkData();
+  checkApp();
 })();

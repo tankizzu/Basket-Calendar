@@ -93,3 +93,6 @@ h2{font-size:15px;margin:20px 4px 4px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .badge.mod{background:#e8f1ff;color:var(--bulldogs)}
 .tabs button{font-size:13px;padding:14px 2px}
+.banner{display:none;background:#15171a;color:#fff;padding:10px 16px;font-size:14px;align-items:center;justify-content:space-between;gap:10px}
+.banner.show{display:flex}
+.banner .btn{background:#fff;color:#15171a;padding:6px 12px;font-size:13px;white-space:nowrap}

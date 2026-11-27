@@ -84,5 +84,44 @@ public class Bridge {
     }
 
     @JavascriptInterface
+    @SuppressWarnings("deprecation")
+    public int getVersionCode() {
+        try {
+            return activity.getPackageManager().getPackageInfo(activity.getPackageName(), 0).versionCode;
+        } catch (Exception e) { return 0; }
+    }
+
+    /** Scarica un testo in background e lo restituisce a window.__fetchCb(id, ok, testo). */
+    @JavascriptInterface
+    public void fetchAsync(String url, String id) {
+        if (url == null || !url.startsWith("https://")) return;
+        new Thread(() -> {
+            boolean ok = false;
+            String text = "";
+            try {
+                java.net.HttpURLConnection con = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+                con.setConnectTimeout(8000);
+                con.setReadTimeout(15000);
+                con.setRequestProperty("User-Agent", "CalendariBasket");
+                con.setRequestProperty("Cache-Control", "no-cache");
+                int code = con.getResponseCode();
+                if (code == 200) {
+                    try (java.io.InputStream in = con.getInputStream()) {
+                        java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                        byte[] buf = new byte[8192];
+                        int n;
+                        while ((n = in.read(buf)) > 0) bo.write(buf, 0, n);
+                        text = bo.toString("UTF-8");
+                        ok = true;
+                    }
+                }
+                con.disconnect();
+            } catch (Exception ignored) { }
+            activity.runJs("window.__fetchCb && window.__fetchCb(" + org.json.JSONObject.quote(id) + "," + ok + ","
+                    + org.json.JSONObject.quote(text) + ")");
+        }).start();
+    }
+
+    @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }
