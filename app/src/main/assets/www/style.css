@@ -99,3 +99,12 @@ h2{font-size:15px;margin:20px 4px 4px}
 .dot.all{background:#9aa1ab}
 .form input[type=time]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px}
 .form textarea{font:13px/1.4 ui-monospace,monospace;padding:8px;border:1px solid var(--line);border-radius:8px;width:100%;margin-bottom:8px}
+.score{font-size:20px;font-weight:800;letter-spacing:.02em;margin:2px 0}
+.badge.esito.vinta{background:#e7f6ec;color:var(--ok)}.badge.esito.persa{background:var(--warn-bg);color:var(--warn)}.badge.esito.pari{background:#eef0f3}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.thumb,.ph img{width:84px;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:#eee}
+.ph{display:flex;flex-direction:column;gap:4px;align-items:center}
+.form input[type=number]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px}
+.viewer{display:none;position:fixed;inset:0;background:#000;z-index:40;overflow:auto}
+.viewer.open{display:block}
+.viewer img{width:100%;height:auto;display:block}

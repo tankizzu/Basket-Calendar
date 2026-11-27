@@ -78,6 +78,34 @@ var Logic = (function () {
     return g.squadraCasa + " – " + g.squadraOspite;
   }
 
+  // Esito dal punto di vista del club (Bulldogs o LIONS).
+  function esito(g, t) {
+    var r = g.risultato;
+    if (!r || r.casa === "" || r.ospite === "" || r.casa == null || r.ospite == null) return null;
+    var mine = g.squadraCasa === t.club ? r.casa : r.ospite;
+    var other = g.squadraCasa === t.club ? r.ospite : r.casa;
+    return mine > other ? "vinta" : (mine < other ? "persa" : "pari");
+  }
+
+  function scoreLine(g) {
+    var r = g.risultato;
+    return g.squadraCasa + " " + r.casa + " – " + r.ospite + " " + g.squadraOspite;
+  }
+
+  function parzialiText(r) {
+    return (r.parziali || []).map(function (p) { return p[0] + "-" + p[1]; }).join(", ");
+  }
+
+  // "25-10, 24-5" -> [[25,10],[24,5]]
+  function parseParziali(txt) {
+    var out = [];
+    String(txt || "").split(/[,;\s]+/).forEach(function (x) {
+      var m = x.match(/^(\d+)[-–:](\d+)$/);
+      if (m) out.push([+m[1], +m[2]]);
+    });
+    return out;
+  }
+
   function minutes(hhmm) { var p = hhmm.split(":").map(Number); return p[0] * 60 + p[1]; }
 
   // Allenamenti che si sovrappongono a una gara nello stesso giorno (gara considerata di 2 ore).
@@ -278,6 +306,8 @@ var Logic = (function () {
           g.modificata = m.quando || "";
         }
       }
+      if (edits.ris && edits.ris[g.id]) g.risultato = edits.ris[g.id];
+      g.foto = (edits.foto && edits.foto[g.id]) || [];
       if (!g.sede && g.casa && sedeCasa[g.team]) { g.sede = sedeCasa[g.team]; g.sedeDaImpostazioni = true; }
       out.push(g);
     });
@@ -330,6 +360,10 @@ var Logic = (function () {
     }
     lines.push("📍 " + (g.sede || "Sede da definire"));
     if (g.stato === "recupero") lines.push("🔁 Recupero");
+    if (g.risultato && esito(g, t)) {
+      lines.push("🏁 " + scoreLine(g));
+      if (g.risultato.parziali && g.risultato.parziali.length) lines.push("📊 Parziali: " + parzialiText(g.risultato));
+    }
     if (g.verifica === "utente" && !isTraining(g)) lines.push("⚠️ Da confermare");
     if (g.noteUtente) lines.push("📝 " + g.noteUtente);
     return lines.join("\n");
@@ -341,7 +375,7 @@ var Logic = (function () {
   }
 
   return {
-    applyEdits: applyEdits, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
+    applyEdits: applyEdits, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
     teamMap: teamMap, toDate: toDate, dayLabel: dayLabel, shortDate: shortDate, teamLabel: teamLabel,
     isActive: isActive, isPast: isPast, overlaps: overlaps, checkU15Weekend: checkU15Weekend,
     matchTitle: matchTitle, buildReminders: buildReminders, buildCalendarEvents: buildCalendarEvents,

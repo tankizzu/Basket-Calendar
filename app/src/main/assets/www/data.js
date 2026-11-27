@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 5,
+ "rev": 6,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -263,7 +263,30 @@ window.BASKET_DATA = {
    "fonte": "ConfederationCupCale.pdf",
    "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "risultato": {
+    "casa": 100,
+    "ospite": 31,
+    "parziali": [
+     [
+      25,
+      10
+     ],
+     [
+      24,
+      5
+     ],
+     [
+      21,
+      11
+     ],
+     [
+      30,
+      5
+     ]
+    ],
+    "fonte": "Referto ufficiale gara 4"
+   }
   },
   {
    "id": "li-sen-2a",

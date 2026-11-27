@@ -139,5 +139,20 @@ public class Bridge {
     }
 
     @JavascriptInterface
+    public void pickPhoto(String gameId) { activity.runOnUiThread(() -> activity.pickPhoto(gameId)); }
+
+    @JavascriptInterface
+    public String photoUrl(String name) {
+        if (name == null || name.contains("/")) return "";
+        return "file://" + new java.io.File(MainActivity.photoDir(activity), name).getAbsolutePath();
+    }
+
+    @JavascriptInterface
+    public void deletePhoto(String name) {
+        if (name == null || name.contains("/")) return;
+        new java.io.File(MainActivity.photoDir(activity), name).delete();
+    }
+
+    @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }

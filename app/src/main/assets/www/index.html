@@ -170,6 +170,30 @@
   </div>
 </div>
 
+<!-- Risultato e referto -->
+<div class="sheet" id="result-sheet">
+  <h2>Risultato e referto</h2>
+  <p class="hint" id="rs-title"></p>
+  <div class="form">
+    <div class="row2">
+      <label><span id="rs-casa-l"></span><input type="number" inputmode="numeric" id="rs-casa"></label>
+      <label><span id="rs-osp-l"></span><input type="number" inputmode="numeric" id="rs-osp"></label>
+    </div>
+    <label>Parziali (es. 25-10, 24-5, 21-11, 30-5)<input type="text" id="rs-parz"></label>
+    <h2>Foto del referto</h2>
+    <div id="rs-photos" class="thumbs"></div>
+    <div class="row"><button class="btn ghost" id="rs-add-photo">Aggiungi foto referto</button></div>
+    <p class="status ko" id="rs-err"></p>
+    <div class="row">
+      <button class="btn" id="rs-save">Salva risultato</button>
+      <button class="btn ghost" id="rs-close">Chiudi</button>
+      <button class="btn ghost" id="rs-clear">Togli risultato</button>
+    </div>
+  </div>
+</div>
+
+<div class="viewer" id="viewer"><img id="viewer-img" alt="Referto"></div>
+
 <!-- Condivisione -->
 <div class="sheet" id="share-sheet">
   <h2>Condividi nelle chat</h2>

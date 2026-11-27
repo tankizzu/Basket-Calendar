@@ -18,7 +18,9 @@
   var MESI = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre"];
 
   var settings = Logic.mergeSettings(BASE, loadJSON("settings"));
-  var edits = loadJSON("edits") || { mod: {}, add: [], del: [] };
+  var edits = loadJSON("edits") || {};
+  ["mod", "ris", "foto"].forEach(function (k) { edits[k] = edits[k] || {}; });
+  ["add", "del"].forEach(function (k) { edits[k] = edits[k] || []; });
   var DATA;
   var now0 = new Date();
   var ui = {
@@ -130,6 +132,9 @@
     else b.push(g.casa ? '<span class="badge casa">Casa</span>' : '<span class="badge">Trasferta</span>');
     if (g.stato === "annullata") b.push('<span class="badge annullata">Annullata</span>');
     if (g.stato === "recupero") b.push('<span class="badge recupero">Recupero</span>');
+    var es = Logic.esito(g, TM[g.team]);
+    if (es) b.push('<span class="badge esito ' + es + '">' + { vinta: "Vinta", persa: "Persa", pari: "Pari" }[es] + "</span>");
+    if (g.foto && g.foto.length) b.push('<span class="badge">Referto 📷</span>');
     if (g.aggiunta) b.push('<span class="badge mod">Aggiunta da te</span>');
     else if (g.modificata !== undefined) b.push('<span class="badge mod">Modificata da te</span>');
     if (g.verifica === "utente" && !g.aggiunta) b.push('<span class="badge utente">Da confermare</span>');
@@ -145,12 +150,20 @@
     if (g.note) det.push(esc(g.note));
     if (g.noteUtente) det.push("Nota tua: " + esc(g.noteUtente));
     if (g.sedeDaImpostazioni) det.push("Sede presa dalla palestra di casa impostata.");
+    if (g.risultato && Logic.esito(g, t)) {
+      if (g.risultato.parziali && g.risultato.parziali.length) det.push("Parziali: " + esc(Logic.parzialiText(g.risultato)));
+      det.push("Risultato: " + esc(g.risultato.fonte || "inserito da te"));
+    }
+    var photos = (g.foto || []).map(function (n) {
+      return '<img class="thumb" loading="lazy" data-photo="' + esc(n) + '" src="' + esc(photoSrc(n)) + '" alt="Referto">';
+    }).join("");
     var st = g.storico && g.storico.length
       ? "<div>Storico:<ul>" + g.storico.map(function (s) { return "<li>" + esc(s.testo) + "</li>"; }).join("") + "</ul></div>"
       : "";
     var act = '<div class="actions">' +
       (g.sede ? '<button class="btn ghost" data-act="map" data-id="' + g.id + '">Mappa</button>' : "") +
       '<button class="btn ghost" data-act="share" data-id="' + g.id + '">Condividi</button>' +
+      (Logic.isTraining(g) ? "" : '<button class="btn ghost" data-act="result" data-id="' + g.id + '">Risultato e referto</button>') +
       '<button class="btn ghost" data-act="edit" data-id="' + g.id + '">Modifica</button>' +
       '<button class="btn ghost" data-act="toggle" data-id="' + g.id + '">' + (g.stato === "annullata" ? "Ripristina gara" : "Segna annullata") + "</button>" +
       "</div>";
@@ -159,15 +172,20 @@
       "<div>" +
       '<div class="team">' + esc(Logic.teamLabel(t)) + "</div>" +
       '<div class="match">' + esc(Logic.matchTitle(g)) + "</div>" +
+      (Logic.esito(g, t) ? '<div class="score">' + g.risultato.casa + " – " + g.risultato.ospite + "</div>" : "") +
       '<div class="meta">' + (g.sede ? esc(g.sede) : "Sede non indicata") + "</div>" +
       badges(g) +
-      '<div class="details">' + det.map(function (d) { return "<div>" + d + "</div>"; }).join("") + st + act + "</div>" +
+      '<div class="details">' + det.map(function (d) { return "<div>" + d + "</div>"; }).join("") + st +
+      (photos ? '<div class="thumbs">' + photos + "</div>" : "") + act + "</div>" +
       "</div></div>";
   }
 
   function bindCards(root) {
     root.querySelectorAll(".game").forEach(function (c) {
       c.addEventListener("click", function () { c.classList.toggle("open"); });
+    });
+    root.querySelectorAll("img[data-photo]").forEach(function (im) {
+      im.addEventListener("click", function (e) { e.stopPropagation(); showPhoto(im.dataset.photo); });
     });
     root.querySelectorAll("[data-act]").forEach(function (b) {
       b.addEventListener("click", function (e) {
@@ -176,6 +194,7 @@
         if (!g) return;
         if (b.dataset.act === "map") openUrl(g.mappa || Logic.mapsUrl(g.sede));
         if (b.dataset.act === "edit") openEditor(g.id);
+        if (b.dataset.act === "result") openResult(g.id);
         if (b.dataset.act === "share") shareOut(Logic.shareText(g, TM[g.team]));
         if (b.dataset.act === "toggle") {
           setMod(g.id, { stato: g.stato === "annullata" ? baseStato(g.id) : "annullata" });
@@ -434,7 +453,7 @@
 
   $("btn-add").addEventListener("click", function () { openEditor(null); });
   $("ed-cancel").addEventListener("click", closeEditor);
-  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); });
+  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); });
 
   $("ed-save").addEventListener("click", function () {
     var cur = ui.editId ? findGame(ui.editId) : null;
@@ -487,6 +506,81 @@
     closeEditor();
     saveEdits();
   });
+
+  // ---------- Risultato e referto ----------
+  function photoSrc(name) { return A && A.photoUrl ? A.photoUrl(name) : ""; }
+
+  function showPhoto(name) {
+    $("viewer-img").src = photoSrc(name);
+    $("viewer").classList.add("open");
+  }
+  $("viewer").addEventListener("click", function () { $("viewer").classList.remove("open"); });
+
+  var resId = null;
+  function openResult(id) {
+    resId = id;
+    var g = findGame(id);
+    $("rs-title").textContent = Logic.matchTitle(g);
+    $("rs-casa-l").textContent = g.squadraCasa;
+    $("rs-osp-l").textContent = g.squadraOspite;
+    var r = g.risultato || {};
+    $("rs-casa").value = r.casa != null ? r.casa : "";
+    $("rs-osp").value = r.ospite != null ? r.ospite : "";
+    $("rs-parz").value = r.parziali ? Logic.parzialiText(r) : "";
+    $("rs-err").textContent = "";
+    renderResultPhotos();
+    $("result-sheet").classList.add("open");
+    $("sheet-bg").classList.add("open");
+  }
+  function closeResult() {
+    $("result-sheet").classList.remove("open");
+    $("sheet-bg").classList.remove("open");
+    resId = null;
+  }
+  function renderResultPhotos() {
+    var list = edits.foto[resId] || [];
+    $("rs-photos").innerHTML = list.length ? list.map(function (n) {
+      return '<div class="ph"><img data-photo="' + esc(n) + '" src="' + esc(photoSrc(n)) + '" alt="Referto">' +
+        '<button class="btn ghost" data-del="' + esc(n) + '">Togli</button></div>';
+    }).join("") : '<p class="empty">Nessuna foto.</p>';
+    $("rs-photos").querySelectorAll("img").forEach(function (im) {
+      im.addEventListener("click", function () { showPhoto(im.dataset.photo); });
+    });
+    $("rs-photos").querySelectorAll("[data-del]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var n = b.dataset.del;
+        edits.foto[resId] = (edits.foto[resId] || []).filter(function (x) { return x !== n; });
+        if (A && A.deletePhoto) A.deletePhoto(n);
+        storeJSON("edits", edits);
+        rebuild(); renderAll(); renderResultPhotos();
+      });
+    });
+  }
+  $("rs-add-photo").addEventListener("click", function () {
+    if (!A || !A.pickPhoto) { $("rs-err").textContent = "Le foto si aggiungono dall'app sul telefono."; return; }
+    A.pickPhoto(resId);
+  });
+  // Richiamata da Android dopo aver salvato la foto scelta.
+  window.onPhotoPicked = function (gameId, name) {
+    if (!name) return;
+    edits.foto[gameId] = (edits.foto[gameId] || []).concat([name]);
+    storeJSON("edits", edits);
+    rebuild(); renderAll();
+    if (resId === gameId) renderResultPhotos();
+  };
+  $("rs-save").addEventListener("click", function () {
+    var c = $("rs-casa").value.trim(), o = $("rs-osp").value.trim();
+    if ((c === "") !== (o === "")) { $("rs-err").textContent = "Inserisci entrambi i punteggi."; return; }
+    if (c === "") delete edits.ris[resId];
+    else {
+      var parz = Logic.parseParziali($("rs-parz").value);
+      edits.ris[resId] = { casa: +c, ospite: +o, parziali: parz, fonte: "Inserito da te" };
+    }
+    closeResult();
+    saveEdits();
+  });
+  $("rs-clear").addEventListener("click", function () { delete edits.ris[resId]; closeResult(); saveEdits(); });
+  $("rs-close").addEventListener("click", closeResult);
 
   // ---------- Condivisione ----------
   function shareOut(text) {
