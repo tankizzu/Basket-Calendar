@@ -74,7 +74,7 @@ var Logic = (function () {
   }
 
   function matchTitle(g) {
-    if (isTraining(g)) return "Allenamento " + g.ora + "–" + g.oraFine;
+    if (isTraining(g)) return "Allenamento " + (g.gruppo ? g.gruppo + " " : "") + g.ora + "–" + g.oraFine;
     return g.squadraCasa + " – " + g.squadraOspite;
   }
 
@@ -84,14 +84,14 @@ var Logic = (function () {
   function trainingConflicts(data, filterFn, opts) {
     opts = opts || {};
     var now = opts.now || new Date();
-    var games = data.partite.filter(function (g) { return isActive(g) && !isTraining(g) && filterFn(g); });
+    var games = data.partite.filter(function (g) { return isActive(g) && !isTraining(g); });
     var out = [];
     data.partite.forEach(function (t) {
       if (!isTraining(t) || !isActive(t)) return;
       if (!opts.includePast && isPast(t, now)) return;
       var a = minutes(t.ora), b = minutes(t.oraFine);
       var hit = games.filter(function (g) {
-        if (g.data !== t.data) return false;
+        if (g.data !== t.data || !filterFn(g, t)) return false;
         var s = minutes(g.ora);
         return s < b && s + 120 > a;
       });
@@ -138,7 +138,7 @@ var Logic = (function () {
           out.push({
             id: g.id + ":pre",
             at: pre.getTime(),
-            titolo: (isTraining(g) ? "Allenamento Bulldogs" : teamLabel(t)) + " alle " + g.ora,
+            titolo: (isTraining(g) ? "Allenamento " + (g.gruppo || teamLabel(t)) : teamLabel(t)) + " alle " + g.ora,
             testo: (isTraining(g) ? g.ora + "–" + g.oraFine : matchTitle(g) + " · " + where) + (g.sede ? " · " + g.sede : "") + conf
           });
         }
@@ -160,7 +160,7 @@ var Logic = (function () {
       var start = toDate(g.data, g.ora).getTime();
       if (isTraining(g)) {
         return {
-          id: g.id, titolo: "[Allenamento BD] " + g.ora + "–" + g.oraFine, luogo: g.sede || "",
+          id: g.id, titolo: "[Allenamento " + (g.gruppo || t.club) + "] " + g.ora + "–" + g.oraFine, luogo: g.sede || "",
           descrizione: [g.noteUtente || "", g.fonte].filter(Boolean).join("\n"),
           inizio: start, fine: toDate(g.data, g.oraFine).getTime()
         };
@@ -226,7 +226,7 @@ var Logic = (function () {
       for (; d <= end; d.setDate(d.getDate() + 7)) {
         var iso = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
         out.push({
-          id: r.id + "-" + iso, team: r.team, tipo: "allenamento", giornata: "", data: iso, ora: r.inizio, oraFine: r.fine,
+          id: r.id + "-" + iso, team: r.team, tipo: "allenamento", gruppo: r.titolo || "", giornata: "", data: iso, ora: r.inizio, oraFine: r.fine,
           casa: true, squadraCasa: "", squadraOspite: "", sede: r.sede, stato: "programmata", verifica: "ufficiale",
           fonte: "Orario allenamenti indicato da te", note: "", storico: [], collegata: null
         });
@@ -317,12 +317,32 @@ var Logic = (function () {
     return weeks;
   }
 
+  // Testo da incollare nelle chat (formattazione WhatsApp).
+  function shareText(g, t) {
+    var lines = [];
+    var head = isTraining(g) ? "🏀 *Allenamento " + (g.gruppo || teamLabel(t)) + "*" : "🏀 *" + teamLabel(t) + "* · " + t.campionato;
+    lines.push(head);
+    if (g.stato === "annullata") lines.push("❌ *ANNULLATA*");
+    lines.push("📅 " + cap(dayLabel(g.data)) + " · ⏰ " + g.ora + (g.oraFine ? "–" + g.oraFine : ""));
+    if (!isTraining(g)) {
+      lines.push("🆚 " + matchTitle(g) + (g.giornata ? " (gara " + g.giornata + ")" : ""));
+      lines.push(g.casa ? "🏠 In casa" : "🚌 In trasferta");
+    }
+    lines.push("📍 " + (g.sede || "Sede da definire"));
+    if (g.sede) lines.push("🗺️ " + mapsUrl(g.sede));
+    if (g.stato === "recupero") lines.push("🔁 Recupero");
+    if (g.verifica === "utente" && !isTraining(g)) lines.push("⚠️ Da confermare");
+    if (g.noteUtente) lines.push("📝 " + g.noteUtente);
+    return lines.join("\n");
+  }
+  function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
+
   function mapsUrl(sede) {
     return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(sede);
   }
 
   return {
-    applyEdits: applyEdits, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
+    applyEdits: applyEdits, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
     teamMap: teamMap, toDate: toDate, dayLabel: dayLabel, shortDate: shortDate, teamLabel: teamLabel,
     isActive: isActive, isPast: isPast, overlaps: overlaps, checkU15Weekend: checkU15Weekend,
     matchTitle: matchTitle, buildReminders: buildReminders, buildCalendarEvents: buildCalendarEvents,

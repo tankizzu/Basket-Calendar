@@ -123,5 +123,21 @@ public class Bridge {
     }
 
     @JavascriptInterface
+    public void share(String text) {
+        activity.runOnUiThread(() -> {
+            Intent send = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
+            activity.startActivity(Intent.createChooser(send, "Condividi"));
+        });
+    }
+
+    @JavascriptInterface
+    public void copy(String text) {
+        activity.runOnUiThread(() -> {
+            android.content.ClipboardManager cm = activity.getSystemService(android.content.ClipboardManager.class);
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("Calendari Basket", text));
+        });
+    }
+
+    @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }

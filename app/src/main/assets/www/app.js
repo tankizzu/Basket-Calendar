@@ -22,7 +22,7 @@
   var DATA;
   var now0 = new Date();
   var ui = {
-    view: "partite", scope: "mie", teams: {}, showPast: false, incPast: false,
+    view: "partite", scope: "mie", teams: {}, showPast: false, showTrain: true, incPast: false,
     month: { y: now0.getFullYear(), m: now0.getMonth() }, selDay: null, editId: null
   };
 
@@ -150,6 +150,7 @@
       : "";
     var act = '<div class="actions">' +
       (g.sede ? '<button class="btn ghost" data-act="map" data-id="' + g.id + '">Mappa</button>' : "") +
+      '<button class="btn ghost" data-act="share" data-id="' + g.id + '">Condividi</button>' +
       '<button class="btn ghost" data-act="edit" data-id="' + g.id + '">Modifica</button>' +
       '<button class="btn ghost" data-act="toggle" data-id="' + g.id + '">' + (g.stato === "annullata" ? "Ripristina gara" : "Segna annullata") + "</button>" +
       "</div>";
@@ -175,6 +176,7 @@
         if (!g) return;
         if (b.dataset.act === "map") openUrl(Logic.mapsUrl(g.sede));
         if (b.dataset.act === "edit") openEditor(g.id);
+        if (b.dataset.act === "share") shareOut(Logic.shareText(g, TM[g.team]));
         if (b.dataset.act === "toggle") {
           setMod(g.id, { stato: g.stato === "annullata" ? baseStato(g.id) : "annullata" });
           saveEdits();
@@ -217,7 +219,9 @@
 
   function renderList() {
     var now = new Date();
-    var games = filtered().filter(function (g) { return ui.showPast || !Logic.isPast(g, now); });
+    var games = filtered().filter(function (g) {
+      return (ui.showPast || !Logic.isPast(g, now)) && (ui.showTrain || !Logic.isTraining(g));
+    });
     var el = $("list");
     var groups = dayGroups(games);
     if (!groups.length) { el.innerHTML = '<p class="empty">Nessuna partita per i filtri scelti.</p>'; return; }
@@ -230,6 +234,7 @@
     bindCards(el);
   }
   $("show-past").addEventListener("change", function (e) { ui.showPast = e.target.checked; renderList(); });
+  $("show-train").addEventListener("change", function (e) { ui.showTrain = e.target.checked; renderList(); });
 
   // ---------- Calendario mensile ----------
   function renderCalendar() {
@@ -299,11 +304,11 @@
     $("inc-mie").innerHTML = incBlock(Logic.overlaps(DATA, function (g) { return MIE.indexOf(g.team) >= 0; }, o));
     $("inc-bulldogs").innerHTML = incBlock(Logic.overlaps(DATA, function (g) { return TM[g.team].club === "Bulldogs"; }, o));
     $("inc-lions").innerHTML = incBlock(Logic.overlaps(DATA, function (g) { return TM[g.team].club === "LIONS"; }, o));
-    var tc = Logic.trainingConflicts(DATA, function (g) { return MIE.indexOf(g.team) >= 0 || TM[g.team].club === "Bulldogs"; }, o);
+    var tc = Logic.trainingConflicts(DATA, function (g, t) { return MIE.indexOf(g.team) >= 0 || TM[g.team].club === TM[t.team].club; }, o);
     $("inc-all").innerHTML = tc.length ? tc.map(function (c) {
       var t = c.allenamento;
       return '<div class="card inc"><div class="d">' + esc(Logic.dayLabel(c.data)) + "</div>" +
-        '<div class="l"><b>' + esc(t.ora) + "</b> Allenamento Bulldogs fino alle " + esc(t.oraFine) + " · " + esc(t.sede) + "</div>" +
+        '<div class="l"><b>' + esc(t.ora) + "</b> " + esc(Logic.matchTitle(t)) + (t.sede ? " · " + esc(t.sede) : "") + "</div>" +
         c.partite.map(function (g) {
           return '<div class="l"><b>' + esc(g.ora) + "</b> " + esc(Logic.teamLabel(TM[g.team])) + ": " + esc(Logic.matchTitle(g)) +
             " · " + (g.casa ? "casa" : "trasferta") + (g.sede ? " · " + esc(g.sede) : "") + "</div>";
@@ -428,7 +433,7 @@
 
   $("btn-add").addEventListener("click", function () { openEditor(null); });
   $("ed-cancel").addEventListener("click", closeEditor);
-  $("sheet-bg").addEventListener("click", closeEditor);
+  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); });
 
   $("ed-save").addEventListener("click", function () {
     var cur = ui.editId ? findGame(ui.editId) : null;
@@ -481,6 +486,54 @@
     closeEditor();
     saveEdits();
   });
+
+  // ---------- Condivisione ----------
+  function shareOut(text) {
+    if (A && A.share) A.share(text);
+    else if (navigator.share) navigator.share({ text: text });
+  }
+  function copyOut(text) {
+    if (A && A.copy) A.copy(text);
+    else if (navigator.clipboard) navigator.clipboard.writeText(text);
+    $("sh-msg").textContent = "Copiato negli appunti.";
+  }
+
+  function shareListText() {
+    var days = +$("sh-period").value;
+    var withTrain = $("sh-train").checked;
+    var now = new Date();
+    var from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var to = days ? new Date(from.getFullYear(), from.getMonth(), from.getDate() + days) : null;
+    var games = filtered().filter(function (g) {
+      var d = Logic.toDate(g.data);
+      return d >= from && (!to || d < to) && (withTrain || !Logic.isTraining(g));
+    });
+    if (!games.length) return "";
+    var head = "🏀 *Impegni " + (days ? "dei prossimi " + days + " giorni" : "in programma") + "*";
+    return head + "\n\n" + games.map(function (g) { return Logic.shareText(g, TM[g.team]); }).join("\n\n—\n\n");
+  }
+
+  function openShare() {
+    $("sh-msg").textContent = "";
+    refreshShare();
+    $("share-sheet").classList.add("open");
+    $("sheet-bg").classList.add("open");
+  }
+  function refreshShare() {
+    var t = shareListText();
+    $("sh-text").value = t;
+    $("sh-count").textContent = t ? "" : "Nessun impegno nel periodo con i filtri scelti.";
+  }
+  function closeShare() {
+    $("share-sheet").classList.remove("open");
+    $("sheet-bg").classList.remove("open");
+  }
+  $("btn-share").addEventListener("click", openShare);
+  $("sh-period").addEventListener("change", refreshShare);
+  $("sh-train").addEventListener("change", refreshShare);
+  $("sh-copy").addEventListener("click", function () { if ($("sh-text").value) copyOut($("sh-text").value); });
+  $("sh-send").addEventListener("click", function () { if ($("sh-text").value) shareOut($("sh-text").value); });
+  $("sh-close").addEventListener("click", closeShare);
 
   // ---------- Impostazioni ----------
   function renderTeamSettings() {

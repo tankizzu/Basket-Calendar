@@ -98,3 +98,4 @@ h2{font-size:15px;margin:20px 4px 4px}
 .banner .btn{background:#fff;color:#15171a;padding:6px 12px;font-size:13px;white-space:nowrap}
 .dot.all{background:#9aa1ab}
 .form input[type=time]{font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px}
+.form textarea{font:13px/1.4 ui-monospace,monospace;padding:8px;border:1px solid var(--line);border-radius:8px;width:100%;margin-bottom:8px}

@@ -28,7 +28,11 @@
   <section id="view-partite" class="view active">
     <div class="row between">
       <label class="check"><input type="checkbox" id="show-past"> Mostra passate</label>
+      <label class="check"><input type="checkbox" id="show-train" checked> Allenamenti</label>
+    </div>
+    <div class="row">
       <button class="btn small" id="btn-add">+ Aggiungi gara</button>
+      <button class="btn small ghost" id="btn-share">Condividi elenco</button>
     </div>
     <div id="list"></div>
   </section>
@@ -58,7 +62,7 @@
     <p class="hint">Più squadre LIONS nello stesso giorno, anche in trasferta.</p>
     <div id="inc-lions"></div>
     <h2>Allenamenti in conflitto</h2>
-    <p class="hint">Allenamenti Bulldogs nella stessa fascia oraria di una gara Bulldogs o di una tua squadra.</p>
+    <p class="hint">Allenamenti nella stessa fascia oraria di una gara dello stesso club o di una tua squadra.</p>
     <div id="inc-all"></div>
     <h2>Vincolo U15 in casa nel weekend</h2>
     <p class="hint">Ammessa solo se nella stessa data gioca anche l'Aquilotti.</p>
@@ -162,6 +166,31 @@
     <div class="row">
       <button class="btn ghost" id="ed-reset">Ripristina originale</button>
       <button class="btn danger" id="ed-delete">Elimina gara</button>
+    </div>
+  </div>
+</div>
+
+<!-- Condivisione -->
+<div class="sheet" id="share-sheet">
+  <h2>Condividi nelle chat</h2>
+  <div class="form">
+    <p class="hint">Usa le squadre filtrate nella scheda Partite. Il testo è pronto per WhatsApp.</p>
+    <label>Periodo
+      <select id="sh-period">
+        <option value="7">Prossimi 7 giorni</option>
+        <option value="14">Prossimi 14 giorni</option>
+        <option value="31">Prossimi 31 giorni</option>
+        <option value="0">Tutte le gare future</option>
+      </select>
+    </label>
+    <label class="check"><input type="checkbox" id="sh-train"> Includi allenamenti</label>
+    <textarea id="sh-text" rows="12"></textarea>
+    <p class="status" id="sh-count"></p>
+    <p class="status ok" id="sh-msg"></p>
+    <div class="row">
+      <button class="btn" id="sh-send">Condividi</button>
+      <button class="btn ghost" id="sh-copy">Copia testo</button>
+      <button class="btn ghost" id="sh-close">Chiudi</button>
     </div>
   </div>
 </div>

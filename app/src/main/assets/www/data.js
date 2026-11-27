@@ -1,9 +1,10 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 2,
+ "rev": 3,
  "allenamenti": [
   {
    "id": "bd-all-lun",
+   "titolo": "Bulldogs",
    "team": "bd-all",
    "giorno": 1,
    "inizio": "17:30",
@@ -14,6 +15,7 @@ window.BASKET_DATA = {
   },
   {
    "id": "bd-all-mer",
+   "titolo": "Bulldogs",
    "team": "bd-all",
    "giorno": 3,
    "inizio": "19:00",
@@ -24,11 +26,56 @@ window.BASKET_DATA = {
   },
   {
    "id": "bd-all-ven",
+   "titolo": "Bulldogs",
    "team": "bd-all",
    "giorno": 5,
    "inizio": "18:30",
    "fine": "20:00",
    "sede": "Palestra Nervi - Via Falisca, snc, Rignano Flaminio",
+   "dal": "2026-11-27",
+   "al": null
+  },
+  {
+   "id": "li-all-min-mar",
+   "titolo": "LIONS U9-U10-U12",
+   "team": "li-all",
+   "giorno": 2,
+   "inizio": "17:00",
+   "fine": "18:30",
+   "sede": "",
+   "dal": "2026-11-27",
+   "al": null
+  },
+  {
+   "id": "li-all-sen-mar",
+   "titolo": "LIONS Senior",
+   "team": "li-all",
+   "giorno": 2,
+   "inizio": "18:45",
+   "fine": "20:45",
+   "sede": "",
+   "dal": "2026-11-27",
+   "al": null
+  },
+  {
+   "id": "li-all-min-gio",
+   "titolo": "LIONS U9-U10-U12",
+   "team": "li-all",
+   "giorno": 4,
+   "inizio": "17:00",
+   "fine": "18:30",
+   "sede": "",
+   "dal": "2026-11-27",
+   "al": null
+  },
+  {
+   "id": "li-all-sen-gio",
+   "titolo": "LIONS Senior",
+   "team": "li-all",
+   "giorno": 4,
+   "inizio": "18:45",
+   "fine": "20:45",
+   "sede": "",
    "dal": "2026-11-27",
    "al": null
   }
@@ -75,6 +122,15 @@ window.BASKET_DATA = {
    "campionato": "Amatori Senior UISP",
    "ruolo": "giocatore",
    "mia": true
+  },
+  {
+   "id": "li-all",
+   "club": "LIONS",
+   "nome": "Allenamenti",
+   "campionato": "Allenamenti settimanali",
+   "ruolo": null,
+   "mia": true,
+   "spentiDiDefault": true
   },
   {
    "id": "li-u9",
