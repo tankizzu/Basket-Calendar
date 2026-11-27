@@ -3,6 +3,10 @@ name: Build APK
 on:
   push:
     branches: [main]
+    # i soli dati delle partite arrivano all'app da soli: non serve un nuovo APK
+    paths-ignore:
+      - 'app/src/main/assets/www/data.js'
+      - 'README.md'
   workflow_dispatch:
 
 permissions:

@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 7,
+ "rev": 8,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -327,6 +327,53 @@ window.BASKET_DATA = {
     ],
     "fonte": "Referto UISP gara 199 (parziali progressivi 15-27, 24-41, 32-65, 45-79)"
    },
+   "tabellino": [
+    {
+     "n": 0,
+     "p": 18,
+     "f": 0
+    },
+    {
+     "n": 32,
+     "p": 8,
+     "f": 0
+    },
+    {
+     "n": 13,
+     "p": 5,
+     "f": 1
+    },
+    {
+     "n": 1,
+     "p": 4,
+     "f": 3
+    },
+    {
+     "n": 9,
+     "p": 4,
+     "f": 0
+    },
+    {
+     "n": 27,
+     "p": 4,
+     "f": 1
+    },
+    {
+     "n": 14,
+     "p": 2,
+     "f": 0
+    },
+    {
+     "n": 8,
+     "p": 0,
+     "f": 1
+    },
+    {
+     "n": 10,
+     "p": 0,
+     "f": 1
+    }
+   ],
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
