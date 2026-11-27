@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.application'
+}
+
+def runNumber = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInteger()
+
+android {
+    namespace 'it.tankizzu.basketcal'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'it.tankizzu.basketcal'
+        minSdk 26
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.0." + runNumber
+    }
+
+    signingConfigs {
+        release {
+            // Chiave fissa: serve perché ogni nuova versione si installi sopra la precedente.
+            storeFile rootProject.file('keystore/basketcal.jks')
+            storePassword 'basketcal2627'
+            keyAlias 'basketcal'
+            keyPassword 'basketcal2627'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

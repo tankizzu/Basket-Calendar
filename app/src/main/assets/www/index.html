@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Calendari Basket</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <h1>Calendari Basket <span>26/27</span></h1>
+</header>
+
+<main>
+  <!-- PARTITE -->
+  <section id="view-partite" class="view active">
+    <div class="seg" id="scope">
+      <button data-scope="mie" class="on">Le mie</button>
+      <button data-scope="Bulldogs">Bulldogs</button>
+      <button data-scope="LIONS">LIONS</button>
+      <button data-scope="tutte">Tutte</button>
+    </div>
+    <div class="chips" id="team-chips"></div>
+    <label class="check"><input type="checkbox" id="show-past"> Mostra partite passate</label>
+    <div id="list"></div>
+  </section>
+
+  <!-- INCROCI -->
+  <section id="view-incroci" class="view">
+    <label class="check"><input type="checkbox" id="inc-past"> Includi date passate</label>
+    <h2>I miei impegni</h2>
+    <p class="hint">Giorni con più gare delle tue squadre (U15 Bulldogs, U9, U12 e Senior LIONS).</p>
+    <div id="inc-mie"></div>
+    <h2>Bulldogs</h2>
+    <p class="hint">Più squadre Bulldogs nello stesso giorno, anche in trasferta.</p>
+    <div id="inc-bulldogs"></div>
+    <h2>LIONS</h2>
+    <p class="hint">Più squadre LIONS nello stesso giorno, anche in trasferta.</p>
+    <div id="inc-lions"></div>
+    <h2>Vincolo U15 in casa nel weekend</h2>
+    <p class="hint">Ammessa solo se nella stessa data gioca anche l'Aquilotti.</p>
+    <div id="vincolo"></div>
+  </section>
+
+  <!-- IMPOSTAZIONI -->
+  <section id="view-impostazioni" class="view">
+    <h2>Squadre</h2>
+    <p class="hint">Scegli quali squadre ti mandano notifiche e quali vanno nel calendario Google.</p>
+    <div id="team-settings"></div>
+
+    <h2>Promemoria</h2>
+    <div class="card form">
+      <label>Organizzazione: giorni prima
+        <select id="org-days"></select>
+      </label>
+      <label>Ora dell'avviso di organizzazione
+        <input type="time" id="org-time">
+      </label>
+      <label>Avviso pre-gara: ore prima
+        <select id="pre-hours"></select>
+      </label>
+      <p class="status" id="notif-status"></p>
+      <div class="row">
+        <button class="btn" id="btn-notif-perm">Consenti notifiche</button>
+        <button class="btn ghost" id="btn-notif-test">Notifica di prova</button>
+      </div>
+    </div>
+
+    <h2>Google Calendar</h2>
+    <div class="card form">
+      <p class="hint">Crea una volta sola un calendario chiamato per esempio "Basket" su calendar.google.com, poi sceglilo qui. L'app ci inserisce solo le squadre con Calendar attivo, aggiorna le gare cambiate e toglie quelle deselezionate.</p>
+      <p class="status" id="cal-status"></p>
+      <div class="row">
+        <button class="btn" id="btn-cal-perm">Consenti accesso al calendario</button>
+      </div>
+      <label>Calendario di destinazione
+        <select id="cal-select"><option value="">— nessuno —</option></select>
+      </label>
+      <div class="row">
+        <button class="btn" id="btn-cal-sync">Sincronizza ora</button>
+      </div>
+      <p class="status" id="sync-status"></p>
+    </div>
+
+    <p class="hint small" id="data-version"></p>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-view="partite" class="on">Partite</button>
+  <button data-view="incroci">Incroci</button>
+  <button data-view="impostazioni">Impostazioni</button>
+</nav>
+
+<script src="data.js"></script>
+<script src="logic.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
