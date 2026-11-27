@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 8,
+ "rev": 9,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -286,7 +286,59 @@ window.BASKET_DATA = {
      ]
     ],
     "fonte": "Referto ufficiale gara 4"
-   }
+   },
+   "tabellino": [
+    {
+     "n": 6,
+     "p": null,
+     "f": 1
+    },
+    {
+     "n": 14,
+     "p": null,
+     "f": 0
+    },
+    {
+     "n": 25,
+     "p": null,
+     "f": 0
+    },
+    {
+     "n": 91,
+     "p": null,
+     "f": 0
+    },
+    {
+     "n": 26,
+     "p": null,
+     "f": 1
+    },
+    {
+     "n": 20,
+     "p": null,
+     "f": 2
+    },
+    {
+     "n": 16,
+     "p": null,
+     "f": 0
+    },
+    {
+     "n": 24,
+     "p": null,
+     "f": 2
+    },
+    {
+     "n": 5,
+     "p": null,
+     "f": 0
+    },
+    {
+     "n": 30,
+     "p": null,
+     "f": 0
+    }
+   ]
   },
   {
    "id": "li-sen-2a",

@@ -409,11 +409,15 @@ var Logic = (function () {
       if (g.team !== teamId || isTraining(g) || g.stato === "annullata" || !g.tabellino) return;
       g.tabellino.forEach(function (r) {
         var k = String(r.n);
-        var x = pl[k] = pl[k] || { n: r.n, partite: 0, punti: 0, falli: 0, max: 0 };
-        x.partite++; x.punti += +r.p || 0; x.falli += +r.f || 0; x.max = Math.max(x.max, +r.p || 0);
+        var x = pl[k] = pl[k] || { n: r.n, partite: 0, partitePunti: 0, punti: 0, falli: 0, max: 0 };
+        x.partite++; x.falli += +r.f || 0;
+        // punti non indicati nel referto: la gara conta per i falli ma non per la media punti
+        if (r.p !== null && r.p !== undefined && r.p !== "") {
+          x.partitePunti++; x.punti += +r.p; x.max = Math.max(x.max, +r.p);
+        }
       });
     });
-    s.giocatori = Object.keys(pl).map(function (k) { return pl[k]; }).sort(function (a, b) { return b.punti - a.punti || a.n - b.n; });
+    s.giocatori = Object.keys(pl).map(function (k) { return pl[k]; }).sort(function (a, b) { return b.punti - a.punti || b.falli - a.falli || a.n - b.n; });
     s.quarti = q.map(function (x, i) {
       return { periodo: i < 4 ? (i + 1) + "° quarto" : "Suppl. " + (i - 3), fatti: x.fatti / x.n, subiti: x.subiti / x.n, n: x.n };
     });

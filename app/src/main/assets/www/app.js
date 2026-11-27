@@ -605,11 +605,11 @@
     tabDraft.forEach(function (r) { tot += +r.p || 0; falli += +r.f || 0; });
     var g = resId ? findGame(resId) : null, msg = "";
     if (tabDraft.length) {
-      msg = "Totale tabellino: " + tot + " punti, " + falli + " falli.";
+      msg = "Totale tabellino: " + tot + " punti, " + falli + " falli." + (tabDraft.some(function (r) { return r.p === ""; }) ? " (Punti vuoti = non indicati.)" : "");
       var c = $("rs-casa").value, o = $("rs-osp").value;
       if (g && c !== "" && o !== "") {
         var mine = g.squadraCasa === TM[g.team].club ? +c : +o;
-        if (mine !== tot) msg += " Attenzione: la squadra ne ha fatti " + mine + ".";
+        if (mine !== tot && !tabDraft.some(function (r) { return r.p === ""; })) msg += " Attenzione: la squadra ne ha fatti " + mine + ".";
       }
     }
     $("rs-tab-sum").textContent = msg;
@@ -632,7 +632,9 @@
     $("rs-osp").value = r.ospite != null ? r.ospite : "";
     $("rs-parz").value = r.parziali ? Logic.parzialiText(r) : "";
     $("rs-err").textContent = "";
-    tabDraft = JSON.parse(JSON.stringify(edits.tab[id] || []));
+    tabDraft = JSON.parse(JSON.stringify(edits.tab[id] || findGame(id).tabellino || [])).map(function (r) {
+      return { n: r.n, p: r.p === null || r.p === undefined ? "" : r.p, f: r.f };
+    });
     renderTab();
     renderResultPhotos();
     $("result-sheet").classList.add("open");
@@ -681,7 +683,7 @@
     if (bad) { $("rs-err").textContent = "Ogni riga del tabellino deve avere il numero di maglia."; return; }
     var nums = tabDraft.filter(function (r) { return r.n !== ""; }).map(function (r) { return String(r.n); });
     if (nums.length !== new Set(nums).size) { $("rs-err").textContent = "Un numero di maglia è ripetuto nel tabellino."; return; }
-    var tab = tabDraft.filter(function (r) { return r.n !== ""; }).map(function (r) { return { n: +r.n, p: +r.p || 0, f: +r.f || 0 }; });
+    var tab = tabDraft.filter(function (r) { return r.n !== ""; }).map(function (r) { return { n: +r.n, p: r.p === "" ? null : +r.p, f: +r.f || 0 }; });
     if (tab.length) edits.tab[resId] = tab; else delete edits.tab[resId];
     if (c === "") delete edits.ris[resId];
     else {
@@ -775,8 +777,9 @@
       }).join("") + '<div class="legend"><span class="dot" style="background:var(--ok)"></span> Fatti <span class="dot" style="background:var(--warn)"></span> Subiti</div></div>' : "") +
       (st.giocatori.length ? "<h2>Giocatori (per numero)</h2>" + '<div class="card ptab"><table><thead><tr><th>N°</th><th>Gare</th><th>Punti</th><th>Media</th><th>Max</th><th>Falli</th><th>F/gara</th></tr></thead><tbody>' +
         st.giocatori.map(function (x) {
-          return "<tr><td><b>" + esc(x.n) + "</b></td><td>" + x.partite + "</td><td><b>" + x.punti + "</b></td><td>" + f1(x.punti / x.partite) +
-            "</td><td>" + x.max + '</td><td class="' + (x.falli / x.partite >= 4 ? "ko" : "") + '">' + x.falli + "</td><td>" + f1(x.falli / x.partite) + "</td></tr>";
+          var pp = x.partitePunti;
+          return "<tr><td><b>" + esc(x.n) + "</b></td><td>" + x.partite + "</td><td><b>" + (pp ? x.punti : "–") + "</b></td><td>" + (pp ? f1(x.punti / pp) : "–") +
+            "</td><td>" + (pp ? x.max : "–") + '</td><td class="' + (x.falli / x.partite >= 4 ? "ko" : "") + '">' + x.falli + "</td><td>" + f1(x.falli / x.partite) + "</td></tr>";
         }).join("") + "</tbody></table></div>" : "") +
       (st.partite.length ? "<h2>Partite</h2>" : "") + st.partite.map(function (r) {
         return '<div class="card res"><div><div>' + esc(Logic.matchTitle(r.g)) + '</div><div class="hint" style="margin:0">' +
