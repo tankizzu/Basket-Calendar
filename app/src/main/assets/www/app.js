@@ -44,7 +44,27 @@
     } catch (e) {}
   }
 
-  function rebuild() { DATA = Logic.applyEdits(BASE, edits, settings.sedeCasa); }
+  function rebuild() {
+    DATA = Logic.applyEdits(BASE, edits, settings.sedeCasa, { pause: settings.pause, ritrovo: settings.ritrovo });
+    pushWidget();
+  }
+
+  // Dati per il widget nella schermata Home: prossimi impegni delle tue squadre.
+  function pushWidget() {
+    if (!A || !A.setWidget) return;
+    var now = Date.now();
+    var items = DATA.partite.filter(function (g) {
+      return MIE.indexOf(g.team) >= 0 && Logic.isActive(g) && Logic.toDate(g.data, g.ora).getTime() > now - 3600000;
+    }).slice(0, 12).map(function (g) {
+      var t = TM[g.team];
+      return {
+        at: Logic.toDate(g.data, g.ora).getTime(), giorno: Logic.dayLabel(g.data).replace(/ \d{4}$/, ""), ora: g.ora,
+        titolo: Logic.isTraining(g) ? Logic.matchTitle(g) : Logic.teamLabel(t) + " · " + Logic.matchTitle(g),
+        club: t.club, sotto: (g.ritrovo ? "Ritrovo " + g.ritrovo + " · " : "") + (g.sede || "")
+      };
+    });
+    try { A.setWidget(JSON.stringify(items)); } catch (e) {}
+  }
 
   function saveSettings() { storeJSON("settings", settings); rebuild(); reschedule(); }
 
@@ -83,6 +103,7 @@
         v.classList.toggle("active", v.id === "view-" + ui.view);
       });
       $("filters").classList.toggle("hidden", ["partite", "calendario", "luoghi"].indexOf(ui.view) < 0);
+      if (ui.view === "stats") renderStats();
       window.scrollTo(0, 0);
     });
   });
@@ -150,6 +171,7 @@
     if (g.note) det.push(esc(g.note));
     if (g.noteUtente) det.push("Nota tua: " + esc(g.noteUtente));
     if (g.sedeDaImpostazioni) det.push("Sede presa dalla palestra di casa impostata.");
+    if (g.autoAnnullata) det.push(esc(g.autoAnnullata) + ". Puoi ripristinarlo con «Ripristina gara».");
     if (g.risultato && Logic.esito(g, t)) {
       if (g.risultato.parziali && g.risultato.parziali.length) det.push("Parziali: " + esc(Logic.parzialiText(g.risultato)));
       det.push("Risultato: " + esc(g.risultato.fonte || "inserito da te"));
@@ -167,16 +189,17 @@
       '<button class="btn ghost" data-act="edit" data-id="' + g.id + '">Modifica</button>' +
       '<button class="btn ghost" data-act="toggle" data-id="' + g.id + '">' + (g.stato === "annullata" ? "Ripristina gara" : "Segna annullata") + "</button>" +
       "</div>";
-    return '<div class="card game ' + t.club + " " + (g.stato === "annullata" ? "annullata " : "") + (past ? "past" : "") + '" data-id="' + g.id + '">' +
+    return '<div class="card game ' + t.club + (Logic.isTraining(g) ? " training" : "") + " " + (g.stato === "annullata" ? "annullata " : "") + (past ? "past" : "") + '" data-id="' + g.id + '">' +
       '<div class="time">' + esc(g.ora) + (showDate ? '<div class="meta">' + esc(Logic.shortDate(g.data)) + "</div>" : "") + "</div>" +
       "<div>" +
       '<div class="team">' + esc(Logic.teamLabel(t)) + "</div>" +
       '<div class="match">' + esc(Logic.matchTitle(g)) + "</div>" +
       (Logic.esito(g, t) ? '<div class="score">' + g.risultato.casa + " – " + g.risultato.ospite + "</div>" : "") +
       '<div class="meta">' + (g.sede ? esc(g.sede) : "Sede non indicata") + "</div>" +
+      (g.ritrovo && g.stato !== "annullata" ? '<div class="rit">🕐 Ritrovo ' + esc(g.ritrovo) + (g.luogoRitrovo ? " · " + esc(g.luogoRitrovo) : "") + "</div>" : "") +
       badges(g) +
-      '<div class="details">' + det.map(function (d) { return "<div>" + d + "</div>"; }).join("") + st +
-      (photos ? '<div class="thumbs">' + photos + "</div>" : "") + act + "</div>" +
+      '<div class="details"><div class="in"><div>' + det.map(function (d) { return "<div>" + d + "</div>"; }).join("") + "</div>" + st +
+      (photos ? '<div class="thumbs">' + photos + "</div>" : "") + act + "</div></div>" +
       "</div></div>";
   }
 
@@ -236,7 +259,30 @@
     return Object.keys(clubs).some(function (c) { return clubs[c] > 1; }) ? active.length : 0;
   }
 
+  function countdown(g, now) {
+    var d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var days = Math.round((Logic.toDate(g.data) - d0) / 86400000);
+    if (days === 0) return "Oggi alle " + g.ora;
+    if (days === 1) return "Domani alle " + g.ora;
+    return "Tra " + days + " giorni";
+  }
+
+  function renderHero() {
+    var now = new Date();
+    var next = filtered().filter(function (g) {
+      return Logic.isActive(g) && !Logic.isTraining(g) && Logic.toDate(g.data, g.ora) > now;
+    })[0];
+    if (!next) { $("hero").innerHTML = ""; return; }
+    var t = TM[next.team];
+    $("hero").innerHTML = '<div class="hero ' + t.club + '"><div class="k">Prossima partita · ' + esc(Logic.teamLabel(t)) + "</div>" +
+      '<div class="when">' + esc(countdown(next, now)) + "</div>" +
+      '<div class="what">' + esc(Logic.matchTitle(next)) + "</div>" +
+      '<div class="where">' + esc(Logic.dayLabel(next.data)) + " · " + esc(next.ora) + (next.sede ? " · " + esc(next.sede) : "") + "</div>" +
+      '<span class="pill">' + (next.casa ? "In casa" : "In trasferta") + (next.ritrovo ? " · ritrovo " + esc(next.ritrovo) : "") + "</span></div>";
+  }
+
   function renderList() {
+    renderHero();
     var now = new Date();
     var games = filtered().filter(function (g) {
       return (ui.showPast || !Logic.isPast(g, now)) && (ui.showTrain || !Logic.isTraining(g));
@@ -277,6 +323,7 @@
       });
     });
     $("cal-grid").innerHTML = html;
+    $("cal-grid").classList.remove("anim"); void $("cal-grid").offsetWidth; $("cal-grid").classList.add("anim");
     document.querySelectorAll("#cal-grid .c").forEach(function (b) {
       b.addEventListener("click", function () {
         ui.selDay = b.dataset.day;
@@ -422,6 +469,8 @@
       $("ed-sede").value = "";
       $("ed-stato").value = "programmata";
       $("ed-note").value = "";
+      $("ed-rit").value = "";
+      $("ed-lrit").value = "";
     } else {
       var g = findGame(id);
       $("ed-data").value = g.data;
@@ -433,12 +482,16 @@
       $("ed-sede").value = g.sedeDaImpostazioni ? "" : (g.sede || "");
       $("ed-stato").value = g.stato;
       $("ed-note").value = g.noteUtente || "";
+      $("ed-rit").value = g.ritrovoUtente || "";
+      $("ed-lrit").value = g.luogoRitrovoUtente || "";
+      $("ed-rit").placeholder = g.ritrovo || "";
     }
     $("sheet").classList.add("open");
     $("sheet-bg").classList.add("open");
   }
 
   function setTrainingMode(on) {
+    $("ed-rit-wrap").style.display = on ? "none" : "";
     $("ed-fine-wrap").style.display = on ? "" : "none";
     $("ed-casa-wrap").style.display = on ? "none" : "";
     $("ed-avv-wrap").style.display = on ? "none" : "";
@@ -453,7 +506,7 @@
 
   $("btn-add").addEventListener("click", function () { openEditor(null); });
   $("ed-cancel").addEventListener("click", closeEditor);
-  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); });
+  $("sheet-bg").addEventListener("click", function () { closeEditor(); closeShare(); closeResult(); closeSoldi(); });
 
   $("ed-save").addEventListener("click", function () {
     var cur = ui.editId ? findGame(ui.editId) : null;
@@ -484,6 +537,9 @@
       if (f.sede !== sedeOld) ch.sede = f.sede;
       if (f.stato !== g.stato) ch.stato = f.stato;
       if (f.note !== (g.noteUtente || "")) ch.note = f.note;
+      var rit = $("ed-rit").value, lrit = $("ed-lrit").value.trim();
+      if (!tr && rit !== (g.ritrovoUtente || "")) ch.ritrovo = rit;
+      if (!tr && lrit !== (g.luogoRitrovoUtente || "")) ch.luogoRitrovo = lrit;
       if (Object.keys(ch).length) setMod(ui.editId, ch);
     }
     closeEditor();
@@ -630,6 +686,146 @@
   $("sh-send").addEventListener("click", function () { if ($("sh-text").value) shareOut($("sh-text").value); });
   $("sh-close").addEventListener("click", closeShare);
 
+  // ---------- Statistiche ----------
+  var statsTeam = "bd-u15";
+  function renderStats() {
+    var teams = BASE.squadre.filter(function (t) { return !/-all$/.test(t.id); });
+    var withRes = teams.filter(function (t) { return Logic.stats(DATA, t.id).giocate > 0; });
+    var list = withRes.length ? withRes : teams.filter(function (t) { return t.id === statsTeam; });
+    if (!list.some(function (t) { return t.id === statsTeam; }) && list.length) statsTeam = list[0].id;
+    $("stats-team").innerHTML = list.map(function (t) {
+      return '<button data-st="' + t.id + '"' + (t.id === statsTeam ? ' class="on"' : "") + ">" + esc(t.nome) + (t.club === "LIONS" ? " L" : "") + "</button>";
+    }).join("");
+    $("stats-team").querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () { statsTeam = b.dataset.st; renderStats(); });
+    });
+    var st = Logic.stats(DATA, statsTeam), t = TM[statsTeam];
+    if (!st.giocate) {
+      $("stats").innerHTML = '<p class="empty">Nessun risultato inserito per ' + esc(Logic.teamLabel(t)) + '. Aggiungili da una partita con «Risultato e referto».</p>';
+      return;
+    }
+    var max = 1;
+    st.quarti.forEach(function (q) { max = Math.max(max, q.fatti, q.subiti); });
+    var f1 = function (x) { return (Math.round(x * 10) / 10).toString().replace(".", ","); };
+    $("stats").innerHTML =
+      '<div class="kpis"><div class="kpi"><b>' + st.vinte + "–" + st.perse + (st.pari ? "–" + st.pari : "") + "</b><span>Vinte–perse</span></div>" +
+      '<div class="kpi" style="animation-delay:60ms"><b>' + f1(st.mediaFatti) + "</b><span>Punti fatti (media)</span></div>" +
+      '<div class="kpi" style="animation-delay:120ms"><b>' + f1(st.mediaSubiti) + "</b><span>Punti subiti (media)</span></div></div>" +
+      (st.quarti.length ? "<h2>Media per quarto</h2>" + '<div class="card bars">' + st.quarti.map(function (q, i) {
+        return '<div class="q"><div>' + esc(q.periodo) + '</div><div class="track">' +
+          '<div class="bar f" style="width:' + (q.fatti / max * 100) + "%;animation-delay:" + (i * 70) + 'ms"></div>' +
+          '<div class="bar s" style="width:' + (q.subiti / max * 100) + "%;animation-delay:" + (i * 70 + 35) + 'ms"></div>' +
+          '<div class="v">fatti ' + f1(q.fatti) + " · subiti " + f1(q.subiti) + "</div></div></div>";
+      }).join("") + '<div class="legend"><span class="dot" style="background:var(--ok)"></span> Fatti <span class="dot" style="background:var(--warn)"></span> Subiti</div></div>' : "") +
+      "<h2>Partite</h2>" + st.partite.map(function (r) {
+        return '<div class="card res"><div><div>' + esc(Logic.matchTitle(r.g)) + '</div><div class="hint" style="margin:0">' +
+          esc(Logic.dayLabel(r.g.data)) + "</div></div>" +
+          '<div class="e ' + (r.esito === "vinta" ? "ok" : r.esito === "persa" ? "ko" : "") + '">' + r.fatti + "–" + r.subiti + "</div></div>";
+      }).join("");
+  }
+
+  // ---------- Ritrovo e pause ----------
+  function renderRitrovo() {
+    $("ritrovo-set").innerHTML = ["Bulldogs", "LIONS"].map(function (c) {
+      var r = settings.ritrovo[c];
+      var opt = function (k) {
+        return [0, 15, 20, 30, 45, 60, 75, 90, 120].map(function (m) {
+          return '<option value="' + m + '"' + (+r[k] === m ? " selected" : "") + ">" + (m ? m + " min prima" : "Nessuno") + "</option>";
+        }).join("");
+      };
+      return "<p><b>" + c + "</b></p>" +
+        '<div class="row2"><label>In casa<select data-rc="' + c + '" data-k="casa">' + opt("casa") + "</select></label>" +
+        '<label>In trasferta<select data-rc="' + c + '" data-k="trasferta">' + opt("trasferta") + "</select></label></div>" +
+        '<div class="row2"><label>Luogo ritrovo (casa)<input type="text" data-rc="' + c + '" data-k="luogoCasa" value="' + esc(r.luogoCasa) + '" placeholder="es. in palestra"></label>' +
+        '<label>Luogo ritrovo (trasferta)<input type="text" data-rc="' + c + '" data-k="luogoTrasferta" value="' + esc(r.luogoTrasferta) + '" placeholder="es. parcheggio"></label></div>';
+    }).join("");
+    $("ritrovo-set").querySelectorAll("[data-rc]").forEach(function (i) {
+      i.addEventListener("change", function () {
+        var v = i.tagName === "SELECT" ? +i.value : i.value.trim();
+        settings.ritrovo[i.dataset.rc][i.dataset.k] = v;
+        saveSettings(); renderAll(); sync(true);
+      });
+    });
+  }
+
+  function renderPause() {
+    var nomeClub = { tutti: "Bulldogs e LIONS", Bulldogs: "Bulldogs", LIONS: "LIONS" };
+    $("pause-list").innerHTML = settings.pause.length ? settings.pause.map(function (p, i) {
+      return '<div class="pz"><div><b>' + esc(p.nome || "Pausa") + "</b><br><small>" + Logic.fmtDM(p.dal) + " – " + Logic.fmtDM(p.al) +
+        " · " + nomeClub[p.club] + '</small></div><button class="btn ghost small" data-pz="' + i + '">Togli</button></div>';
+    }).join("") : '<p class="empty">Nessuna pausa impostata.</p>';
+    $("pause-list").querySelectorAll("[data-pz]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        settings.pause.splice(+b.dataset.pz, 1);
+        saveSettings(); renderAll(); renderPause(); sync(true);
+      });
+    });
+  }
+  $("pz-add").addEventListener("click", function () {
+    var dal = $("pz-dal").value, al = $("pz-al").value;
+    if (!dal || !al || al < dal) { $("pz-err").textContent = "Scegli le date: la fine non può essere prima dell'inizio."; return; }
+    $("pz-err").textContent = "";
+    settings.pause.push({ dal: dal, al: al, club: $("pz-club").value, nome: $("pz-nome").value.trim() });
+    settings.pause.sort(function (a, b) { return a.dal < b.dal ? -1 : 1; });
+    $("pz-dal").value = ""; $("pz-al").value = ""; $("pz-nome").value = "";
+    saveSettings(); renderAll(); renderPause(); sync(true);
+  });
+
+  // ---------- Soldirini ----------
+  function renderSoldiSettings() {
+    $("sd-url").value = settings.soldirini.url;
+    $("sd-teams").innerHTML = BASE.squadre.map(function (t) {
+      var on = settings.soldirini.squadre.indexOf(t.id) >= 0;
+      return '<button class="chip ' + t.club + (on ? " on" : "") + '" data-sd="' + t.id + '">' + esc(Logic.teamLabel(t)) + "</button>";
+    }).join("");
+    $("sd-teams").querySelectorAll("[data-sd]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var id = b.dataset.sd, l = settings.soldirini.squadre, i = l.indexOf(id);
+        if (i >= 0) l.splice(i, 1); else l.push(id);
+        saveSettings(); renderSoldiSettings();
+      });
+    });
+  }
+  $("sd-url").addEventListener("change", function () {
+    var v = $("sd-url").value.trim();
+    if (/^https:\/\//.test(v)) { settings.soldirini.url = v; saveSettings(); } else $("sd-url").value = settings.soldirini.url;
+  });
+
+  function soldiPayload() {
+    return Logic.soldiriniExport(DATA, $("sd-month").value, settings.soldirini.squadre);
+  }
+  function renderSoldiPreview() {
+    var ex = soldiPayload();
+    $("sd-msg").textContent = "";
+    $("sd-preview").innerHTML = ex.attivita.length ? ex.attivita.map(function (a) {
+      return '<div class="pz"><div>' + esc(Logic.dayLabel(a.data)) + "<br><small>" + (a.tipo === "allenamento" ? "Allenamento " + esc(a.squadra) : "Partita " + esc(a.squadra) + " vs " + esc(a.avversario)) +
+        " · " + a.da + "–" + a.a + (a.luogo ? " · " + esc(a.luogo) : "") + "</small></div></div>";
+    }).join("") : '<p class="empty">Nessuna attività nel mese per le squadre scelte in Impostazioni.</p>';
+    $("sd-open").disabled = !ex.attivita.length;
+    $("sd-copy").disabled = !ex.attivita.length;
+  }
+  function openSoldi() {
+    var n = new Date();
+    if (!$("sd-month").value) $("sd-month").value = n.getFullYear() + "-" + Logic.pad(n.getMonth() + 1);
+    renderSoldiPreview();
+    $("soldi-sheet").classList.add("open");
+    $("sheet-bg").classList.add("open");
+  }
+  function closeSoldi() { $("soldi-sheet").classList.remove("open"); $("sheet-bg").classList.remove("open"); }
+  $("btn-soldi").addEventListener("click", openSoldi);
+  $("sd-month").addEventListener("change", renderSoldiPreview);
+  $("sd-close").addEventListener("click", closeSoldi);
+  $("sd-open").addEventListener("click", function () {
+    var url = settings.soldirini.url.replace(/#.*$/, "");
+    url += (url.indexOf("?") >= 0 ? "&" : "?") + "importa=basket#dati=" + Logic.b64url(JSON.stringify(soldiPayload()));
+    openUrl(url);
+  });
+  $("sd-copy").addEventListener("click", function () {
+    var txt = "CALENDARI-BASKET:" + Logic.b64url(JSON.stringify(soldiPayload()));
+    if (A && A.copy) A.copy(txt); else if (navigator.clipboard) navigator.clipboard.writeText(txt);
+    $("sd-msg").textContent = "Dati copiati: in Soldirini usa «Incolla da Calendari Basket».";
+  });
+
   // ---------- Impostazioni ----------
   function renderTeamSettings() {
     $("team-settings").innerHTML = BASE.squadre.map(function (t) {
@@ -760,6 +956,7 @@
   function renderFiltered() { renderList(); renderCalendar(); renderLuoghi(); }
   function renderAll() {
     renderFiltered(); renderIncroci(); renderTeamSettings(); renderSedeCasa(); renderEditsStatus();
+    if (ui.view === "stats") renderStats();
   }
 
   // ---------- Aggiornamenti automatici ----------
@@ -820,7 +1017,7 @@
 
   rebuild();
   renderVersion();
-  renderChips(); renderAll(); renderPromemoria();
+  renderChips(); renderAll(); renderPromemoria(); renderRitrovo(); renderPause(); renderSoldiSettings();
   renderNotifStatus(); renderCalSettings();
   reschedule();
   sync(true); // dopo un aggiornamento dell'app porta i nuovi dati nel calendario

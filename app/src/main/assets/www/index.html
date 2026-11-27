@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>Calendari Basket</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="top">
-  <h1>Calendari Basket <span>26/27</span></h1>
+  <div class="brand"><span class="ball" aria-hidden="true"></span><h1>Calendari Basket <span>26/27</span></h1></div>
 </header>
 <div class="banner" id="update-banner"></div>
 
@@ -26,6 +27,7 @@
 
   <!-- PARTITE -->
   <section id="view-partite" class="view active">
+    <div id="hero"></div>
     <div class="row between">
       <label class="check"><input type="checkbox" id="show-past"> Mostra passate</label>
       <label class="check"><input type="checkbox" id="show-train" checked> Allenamenti</label>
@@ -33,6 +35,7 @@
     <div class="row">
       <button class="btn small" id="btn-add">+ Aggiungi gara</button>
       <button class="btn small ghost" id="btn-share">Condividi elenco</button>
+      <button class="btn small ghost" id="btn-soldi">Soldirini</button>
     </div>
     <div id="list"></div>
   </section>
@@ -69,6 +72,12 @@
     <div id="vincolo"></div>
   </section>
 
+  <!-- STATISTICHE -->
+  <section id="view-stats" class="view">
+    <div class="seg" id="stats-team"></div>
+    <div id="stats"></div>
+  </section>
+
   <!-- LUOGHI -->
   <section id="view-luoghi" class="view">
     <p class="hint">Palestre delle squadre filtrate. Tocca "Mappa" per aprire Google Maps.</p>
@@ -87,6 +96,35 @@
     <h2>Palestra di casa</h2>
     <p class="hint">Usata per le gare in casa che nel calendario non hanno la sede.</p>
     <div class="card form" id="sede-casa"></div>
+
+    <h2>Ritrovo</h2>
+    <p class="hint">Quanto prima della gara vi trovate. Compare nella scheda, nelle notifiche e nei messaggi per WhatsApp. Ogni gara può avere un orario e un luogo propri (Modifica).</p>
+    <div class="card form" id="ritrovo-set"></div>
+
+    <h2>Pause degli allenamenti</h2>
+    <p class="hint">Nei periodi di pausa gli allenamenti si annullano da soli. Gli allenamenti Bulldogs si annullano da soli anche nei giorni di partita Bulldogs.</p>
+    <div class="card form">
+      <div id="pause-list"></div>
+      <div class="row2">
+        <label>Dal <input type="date" id="pz-dal"></label>
+        <label>Al <input type="date" id="pz-al"></label>
+      </div>
+      <div class="row2">
+        <label>Club
+          <select id="pz-club"><option value="tutti">Bulldogs e LIONS</option><option value="Bulldogs">Solo Bulldogs</option><option value="LIONS">Solo LIONS</option></select>
+        </label>
+        <label>Nome <input type="text" id="pz-nome" placeholder="es. Natale"></label>
+      </div>
+      <p class="status ko" id="pz-err"></p>
+      <div class="row"><button class="btn" id="pz-add">Aggiungi pausa</button></div>
+    </div>
+
+    <h2>Soldirini (rimborso km)</h2>
+    <div class="card form">
+      <p class="hint">Squadre da mandare a Soldirini:</p>
+      <div id="sd-teams" class="chips"></div>
+      <label>Indirizzo di Soldirini <input type="text" id="sd-url"></label>
+    </div>
 
     <h2>Promemoria</h2>
     <div class="card form">
@@ -150,6 +188,10 @@
     </label>
     <label id="ed-avv-wrap">Avversario <input type="text" id="ed-avv"></label>
     <label>Sede (palestra e indirizzo) <input type="text" id="ed-sede"></label>
+    <div class="row2" id="ed-rit-wrap">
+      <label>Ritrovo (ora) <input type="time" id="ed-rit"></label>
+      <label>Luogo ritrovo <input type="text" id="ed-lrit"></label>
+    </div>
     <label>Stato
       <select id="ed-stato">
         <option value="programmata">Programmata</option>
@@ -192,6 +234,22 @@
   </div>
 </div>
 
+<!-- Soldirini -->
+<div class="sheet" id="soldi-sheet">
+  <h2>Manda a Soldirini</h2>
+  <div class="form">
+    <p class="hint">Gare e allenamenti non annullati del mese, per il rimborso km. In Soldirini controlli e confermi prima che vengano salvati.</p>
+    <label>Mese <input type="month" id="sd-month"></label>
+    <div id="sd-preview" class="sd-preview"></div>
+    <p class="status" id="sd-msg"></p>
+    <div class="row">
+      <button class="btn" id="sd-open">Apri in Soldirini</button>
+      <button class="btn ghost" id="sd-copy">Copia dati</button>
+      <button class="btn ghost" id="sd-close">Chiudi</button>
+    </div>
+  </div>
+</div>
+
 <div class="viewer" id="viewer"><img id="viewer-img" alt="Referto"></div>
 
 <!-- Condivisione -->
@@ -220,11 +278,12 @@
 </div>
 
 <nav class="tabs">
-  <button data-view="partite" class="on">Partite</button>
-  <button data-view="calendario">Calendario</button>
-  <button data-view="incroci">Incroci</button>
-  <button data-view="luoghi">Luoghi</button>
-  <button data-view="impostazioni">Impost.</button>
+  <button data-view="partite" class="on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Partite</span></button>
+  <button data-view="calendario"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Calendario</span></button>
+  <button data-view="incroci"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/></svg><span>Incroci</span></button>
+  <button data-view="stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg><span>Statistiche</span></button>
+  <button data-view="luoghi"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>Luoghi</span></button>
+  <button data-view="impostazioni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Impost.</span></button>
 </nav>
 
 <script src="data.js"></script>

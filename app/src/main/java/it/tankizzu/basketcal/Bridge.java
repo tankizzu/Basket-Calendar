@@ -154,5 +154,11 @@ public class Bridge {
     }
 
     @JavascriptInterface
+    public void setWidget(String json) {
+        prefs(activity).edit().putString("widget", json).apply();
+        BasketWidget.refresh(activity);
+    }
+
+    @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }
