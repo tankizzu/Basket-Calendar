@@ -1416,6 +1416,8 @@
   var lastCheck = Date.now();
   window.onNativeResume = function () {
     renderNotifStatus(); renderCalSettings();
+    if (typeof renderAutoUpd === "function") renderAutoUpd();
+    if (waitingInstallPerm) { waitingInstallPerm = false; lastCheck = Date.now(); checkApp(); }
     // ogni volta che riapri l'app (al massimo ogni 2 minuti) controlla se ci sono dati nuovi
     if (Date.now() - lastCheck > 120000) { lastCheck = Date.now(); checkData(); checkApp(); }
   };
@@ -1478,13 +1480,45 @@
         var re = new RegExp("^" + CFG.apk + "-v\\d+\\.apk$");
         var asset = (r.assets || []).filter(function (x) { return re.test(x.name); })[0];
         if (n > A.getVersionCode() && asset) {
-          showBanner("Nuova versione v" + n + " dell'app", "Scarica", function () { openUrl(asset.browser_download_url); });
+          var url = asset.browser_download_url;
+          if (A.selfUpdate && settings.autoUpd !== false) {
+            if (A.canSelfUpdate()) {
+              showBanner("Aggiorno l'app alla versione " + n + "…");
+              A.selfUpdate(url);
+            } else {
+              showBanner("Nuova versione " + n + ": consenti gli aggiornamenti automatici", "Consenti", function () {
+                waitingInstallPerm = true; A.openInstallSettings();
+              });
+            }
+          } else {
+            showBanner("Nuova versione v" + n + " dell'app", "Scarica", function () { openUrl(url); });
+          }
         }
       } catch (e) {}
     });
   }
 
   $("btn-upd").addEventListener("click", function () { FX.vibrate(10); checkData(true); checkApp(); });
+
+  // ---------- Aggiornamento automatico dell'app ----------
+  var waitingInstallPerm = false;
+  window.onUpdateProgress = function (stato, pc) {
+    var b = $("update-banner");
+    if (stato === "scarico") b.innerHTML = "<span>Scarico l'aggiornamento… " + pc + "%</span>";
+    else if (stato === "installo") b.innerHTML = "<span>Installo l'aggiornamento: l'app si chiuderà un attimo.</span>";
+    else b.innerHTML = "<span>Aggiornamento non riuscito (" + esc(stato.replace(/^errore: /, "")) + "). Riprova da Impostazioni.</span>";
+    b.classList.add("show");
+  };
+  function renderAutoUpd() {
+    if (!A || !A.selfUpdate) { $("au-wrap").style.display = "none"; return; }
+    $("au-toggle").checked = settings.autoUpd !== false;
+    var ok = A.canSelfUpdate();
+    $("au-status").innerHTML = ok ? '<span class="ok">Installazione consentita</span> · gli aggiornamenti arrivano da soli' :
+      '<span class="ko">Serve il permesso di Android</span> (una volta sola)';
+    $("au-perm").style.display = ok ? "none" : "";
+  }
+  $("au-toggle").addEventListener("change", function (e) { settings.autoUpd = e.target.checked; saveSettings(); renderAutoUpd(); });
+  $("au-perm").addEventListener("click", function () { waitingInstallPerm = true; A.openInstallSettings(); });
 
   function renderVersion() {
     $("data-version").textContent = "Dati aggiornati al " + BASE.versione.split("-").reverse().join("/") +
@@ -1534,7 +1568,7 @@
   $("show-train").checked = ui.showTrain;
   renderChips(); renderAll(); renderPromemoria(); renderRitrovo(); renderPause(); renderIcon(); applyClubTheme();
   FX.splash();
-  renderNotifStatus(); renderCalSettings();
+  renderNotifStatus(); renderCalSettings(); renderAutoUpd();
   reschedule();
   sync(true); // dopo un aggiornamento dell'app porta i nuovi dati nel calendario
   checkData();

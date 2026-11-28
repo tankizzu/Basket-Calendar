@@ -315,6 +315,7 @@ var Logic = (function () {
     if (!saved) return s;
     if (saved.sedeCasa) s.sedeCasa = saved.sedeCasa;
     if (saved.pause) s.pause = saved.pause;
+    if (typeof saved.autoUpd === "boolean") s.autoUpd = saved.autoUpd;
     if (saved.ritrovo) ["Bulldogs", "LIONS"].forEach(function (c) {
       if (saved.ritrovo[c]) Object.keys(s.ritrovo[c]).forEach(function (k) {
         if (saved.ritrovo[c][k] !== undefined) s.ritrovo[c][k] = saved.ritrovo[c][k];

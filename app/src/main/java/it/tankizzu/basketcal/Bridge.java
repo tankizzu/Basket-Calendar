@@ -279,6 +279,30 @@ public class Bridge {
         }).start();
     }
 
+    /** L'app può installare aggiornamenti? (permesso "Installa app sconosciute") */
+    @JavascriptInterface
+    public boolean canSelfUpdate() {
+        return Build.VERSION.SDK_INT < 26 || activity.getPackageManager().canRequestPackageInstalls();
+    }
+
+    @JavascriptInterface
+    public void openInstallSettings() {
+        activity.runOnUiThread(() -> {
+            try {
+                activity.startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:" + activity.getPackageName())));
+            } catch (Exception ignored) { }
+        });
+    }
+
+    /** Scarica e installa l'aggiornamento; avanzamento a window.onUpdateProgress(stato, percento). */
+    @JavascriptInterface
+    public void selfUpdate(String apkUrl) {
+        if (apkUrl == null || !apkUrl.startsWith("https://github.com/tankizzu/")) return;
+        Updater.downloadAndInstall(activity, apkUrl, (stato, pc) ->
+                activity.runJs("window.onUpdateProgress && window.onUpdateProgress(" + org.json.JSONObject.quote(stato) + "," + pc + ")"));
+    }
+
     @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }
