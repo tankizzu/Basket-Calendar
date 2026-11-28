@@ -46,7 +46,10 @@ public class ImageProvider extends ContentProvider {
         return c;
     }
 
-    @Override public String getType(Uri uri) { return "image/png"; }
+    @Override public String getType(Uri uri) {
+        String n = uri.getLastPathSegment();
+        return n != null && n.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+    }
     @Override public Uri insert(Uri uri, ContentValues v) { return null; }
     @Override public int delete(Uri uri, String s, String[] a) { return 0; }
     @Override public int update(Uri uri, ContentValues v, String s, String[] a) { return 0; }

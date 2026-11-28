@@ -745,10 +745,14 @@
     var list = edits.foto[resId] || [];
     $("rs-photos").innerHTML = list.length ? list.map(function (n) {
       return '<div class="ph"><img data-photo="' + esc(n) + '" src="' + esc(photoSrc(n)) + '" alt="Referto">' +
+        '<button class="btn ghost" data-sh="' + esc(n) + '">Condividi</button>' +
         '<button class="btn ghost" data-del="' + esc(n) + '">Togli</button></div>';
     }).join("") : '<p class="empty">Nessuna foto.</p>';
     $("rs-photos").querySelectorAll("img").forEach(function (im) {
       im.addEventListener("click", function () { showPhoto(im.dataset.photo); });
+    });
+    $("rs-photos").querySelectorAll("[data-sh]").forEach(function (b) {
+      b.addEventListener("click", function () { if (A && A.sharePhoto) { FX.vibrate(10); A.sharePhoto(b.dataset.sh); } });
     });
     $("rs-photos").querySelectorAll("[data-del]").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -781,11 +785,10 @@
     if (nums.length !== new Set(nums).size) { $("rs-err").textContent = "Un numero di maglia è ripetuto nel tabellino."; return; }
     var tab = tabDraft.filter(function (r) { return r.n !== ""; }).map(function (r) { return { n: +r.n, p: r.p === "" ? null : +r.p, f: +r.f || 0 }; });
     if (tab.length) edits.tab[resId] = tab; else delete edits.tab[resId];
-    if (c === "") delete edits.ris[resId];
-    else {
-      var parz = Logic.parseParziali($("rs-parz").value);
-      edits.ris[resId] = { casa: +c, ospite: +o, parziali: parz, fonte: "Inserito da te" };
-    }
+    var parz = Logic.parseParziali($("rs-parz").value);
+    var fixed = Logic.fixResult({ casa: c, ospite: o, parziali: parz, fonte: "Inserito da te" });
+    if (!fixed) delete edits.ris[resId];
+    else edits.ris[resId] = fixed;
     var gid = resId;
     closeResult();
     saveEdits();
@@ -908,6 +911,13 @@
     if (!endArmed) { endArmed = true; $("lv-end").textContent = "Tocca ancora per chiudere e salvare"; setTimeout(function () { endArmed = false; $("lv-end").textContent = "Termina partita"; }, 4000); return; }
     endArmed = false; $("lv-end").textContent = "Termina partita";
     var g = findGame(liveId), t = TM[g.team];
+    if (!(edits.live[liveId].ev || []).length) {
+      delete edits.live[liveId];
+      if (A && A.liveClear) { try { A.liveClear(); } catch (e) {} }
+      $("live").classList.remove("open");
+      saveEdits();
+      return;
+    }
     var r = Logic.liveResult(edits.live[liveId], g, t);
     edits.ris[liveId] = r.ris;
     if (r.tab.length) edits.tab[liveId] = r.tab;
@@ -928,12 +938,17 @@
     recapId = id;
     var g = findGame(id);
     $("recap-text").value = Logic.recap(g, TM[g.team]);
+    $("recap-photo").style.display = g.foto && g.foto.length && A && A.sharePhoto ? "" : "none";
     $("recap-sheet").classList.add("open"); $("sheet-bg").classList.add("open");
   }
   function closeRecap() { $("recap-sheet").classList.remove("open"); $("sheet-bg").classList.remove("open"); }
   $("recap-close").addEventListener("click", closeRecap);
   $("recap-share").addEventListener("click", function () { shareOut($("recap-text").value); });
   $("recap-img").addEventListener("click", function () { closeRecap(); openImage(recapId); });
+  $("recap-photo").addEventListener("click", function () {
+    var g = findGame(recapId);
+    if (g.foto && g.foto.length && A && A.sharePhoto) A.sharePhoto(g.foto[g.foto.length - 1]);
+  });
 
   // ---------- Presenze agli allenamenti ----------
   var presId = null, presDraft = [];

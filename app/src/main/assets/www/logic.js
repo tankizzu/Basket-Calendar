@@ -168,6 +168,9 @@ var Logic = (function () {
       if (top[0].p > 0) lines.push("⭐ Miglior marcatore: #" + top[0].n + " con " + top[0].p + " punti");
       var segn = tab.filter(function (x) { return x.p > 0; }).length;
       lines.push("👥 A segno " + segn + " giocator" + (segn === 1 ? "e" : "i"));
+      lines.push("📋 Tabellino: " + top.map(function (x) {
+        return "#" + x.n + " " + x.p + (x.f ? " (" + x.f + "f)" : "");
+      }).join(" · "));
     }
     return lines.join("\n");
   }
@@ -400,7 +403,10 @@ var Logic = (function () {
           g.modificata = m.quando || "";
         }
       }
-      if (edits.ris && edits.ris[g.id]) g.risultato = edits.ris[g.id];
+      if (edits.ris && edits.ris[g.id]) {
+        var rr = fixResult(edits.ris[g.id]);
+        if (rr) g.risultato = rr; // un risultato vuoto (0–0 senza parziali) non copre quello del referto
+      }
       g.foto = (edits.foto && edits.foto[g.id]) || [];
       if (edits.pres && edits.pres[g.id]) g.presenti = edits.pres[g.id];
       if (edits.live && edits.live[g.id] && !edits.live[g.id].chiusa) g.inCorso = true;
@@ -510,6 +516,19 @@ var Logic = (function () {
   }
 
 
+  // Risultato inserito a mano: se il finale è 0–0 (o vuoto) ma ci sono i parziali, il finale è la loro somma.
+  function fixResult(r) {
+    if (!r) return null;
+    var sc = 0, so = 0;
+    (r.parziali || []).forEach(function (p) { sc += +p[0] || 0; so += +p[1] || 0; });
+    var c = r.casa === "" || r.casa == null ? 0 : +r.casa, o = r.ospite === "" || r.ospite == null ? 0 : +r.ospite;
+    if (c === 0 && o === 0) {
+      if (sc === 0 && so === 0) return null;
+      return { casa: sc, ospite: so, parziali: r.parziali, fonte: r.fonte };
+    }
+    return r;
+  }
+
   function newGame(teamId, club, f) {
     var id = teamId + "-u" + Date.now().toString(36);
     return {
@@ -571,7 +590,7 @@ var Logic = (function () {
   }
 
   return {
-    applyEdits: applyEdits, liveState: liveState, liveResult: liveResult, recap: recap, attendance: attendance, stats: stats, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
+    applyEdits: applyEdits, fixResult: fixResult, liveState: liveState, liveResult: liveResult, recap: recap, attendance: attendance, stats: stats, esito: esito, scoreLine: scoreLine, parzialiText: parzialiText, parseParziali: parseParziali, shareText: shareText, isTraining: isTraining, expandTrainings: expandTrainings, trainingConflicts: trainingConflicts, newGame: newGame, monthGrid: monthGrid, mapsUrl: mapsUrl, fmtDM: fmtDM,
     teamMap: teamMap, toDate: toDate, dayLabel: dayLabel, shortDate: shortDate, teamLabel: teamLabel,
     isActive: isActive, isPast: isPast, overlaps: overlaps, checkU15Weekend: checkU15Weekend,
     matchTitle: matchTitle, buildReminders: buildReminders, buildCalendarEvents: buildCalendarEvents,

@@ -255,6 +255,30 @@ public class Bridge {
         });
     }
 
+    /** Condivide la foto del referto salvata nell'app. */
+    @JavascriptInterface
+    public void sharePhoto(String name) {
+        if (name == null || name.contains("/")) return;
+        new Thread(() -> {
+            try {
+                java.io.File src = new java.io.File(MainActivity.photoDir(activity), name);
+                java.io.File dst = new java.io.File(ImageProvider.dir(activity), name);
+                try (java.io.InputStream in = new java.io.FileInputStream(src);
+                     java.io.OutputStream out = new java.io.FileOutputStream(dst)) {
+                    byte[] buf = new byte[16384];
+                    int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                }
+                Uri uri = Uri.parse("content://" + ImageProvider.AUTH + "/" + name);
+                Intent send = new Intent(Intent.ACTION_SEND).setType("image/jpeg")
+                        .putExtra(Intent.EXTRA_STREAM, uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                send.setClipData(android.content.ClipData.newRawUri("", uri));
+                activity.runOnUiThread(() -> activity.startActivity(Intent.createChooser(send, "Condividi referto")));
+            } catch (Exception ignored) { }
+        }).start();
+    }
+
     @JavascriptInterface
     public String getLastSync() { return prefs(activity).getString("lastSync", ""); }
 }
