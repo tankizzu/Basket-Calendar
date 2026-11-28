@@ -1398,7 +1398,8 @@
   var lastCheck = Date.now();
   window.onNativeResume = function () {
     renderNotifStatus(); renderCalSettings();
-    if (Date.now() - lastCheck > 3600000) { lastCheck = Date.now(); checkData(); checkApp(); }
+    // ogni volta che riapri l'app (al massimo ogni 2 minuti) controlla se ci sono dati nuovi
+    if (Date.now() - lastCheck > 120000) { lastCheck = Date.now(); checkData(); checkApp(); }
   };
 
   // ---------- Avvio ----------
@@ -1426,12 +1427,17 @@
     else setTimeout(function () { b.classList.remove("show"); }, 5000);
   }
 
-  function checkData() {
+  function checkData(manual) {
+    if (manual && !(A && A.fetchAsync)) { $("upd-msg").textContent = "Disponibile nell'app sul telefono."; return; }
+    if (manual) $("upd-msg").textContent = "Controllo in corso…";
     fetchText(DATA_URL + "?t=" + Date.now(), function (ok, text) {
-      if (!ok) return;
+      if (!ok) { if (manual) $("upd-msg").textContent = "Nessuna connessione: riprova tra poco."; return; }
       var json;
       try { json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return; }
-      if (!json.partite || !json.squadre || (json.rev || 0) <= (BASE.rev || 0)) return;
+      if (!json.partite || !json.squadre || (json.rev || 0) <= (BASE.rev || 0)) {
+        if (manual) $("upd-msg").textContent = "Hai già i dati più recenti (rev. " + (BASE.rev || 0) + ").";
+        return;
+      }
       storeJSON("remoteData", json);
       setBase(json);
       settings = Logic.mergeSettings(BASE, settings);
@@ -1441,6 +1447,7 @@
       reschedule();
       sync(true);
       showBanner("Partite aggiornate (" + BASE.partite.length + " gare).");
+      if (manual) $("upd-msg").textContent = "Dati aggiornati (rev. " + BASE.rev + ").";
     });
   }
 
@@ -1458,6 +1465,8 @@
       } catch (e) {}
     });
   }
+
+  $("btn-upd").addEventListener("click", function () { FX.vibrate(10); checkData(true); checkApp(); });
 
   function renderVersion() {
     $("data-version").textContent = "Dati aggiornati al " + BASE.versione.split("-").reverse().join("/") +
