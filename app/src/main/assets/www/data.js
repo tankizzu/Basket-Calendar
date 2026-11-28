@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 12,
+ "rev": 13,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -180,6 +180,40 @@ window.BASKET_DATA = {
  ],
  "partite": [
   {
+   "id": "bd-u15-A1",
+   "team": "bd-u15",
+   "giornata": "A1",
+   "data": "2026-10-26",
+   "ora": "17:30",
+   "casa": false,
+   "squadraCasa": "Ares",
+   "squadraOspite": "Bulldogs",
+   "sede": "Largo Giampaolo Borghi, Roma",
+   "stato": "programmata",
+   "verifica": "ufficiale",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
+   "note": "Amichevole",
+   "storico": [],
+   "collegata": null
+  },
+  {
+   "id": "bd-aqu-A1",
+   "team": "bd-aqu",
+   "giornata": "A1",
+   "data": "2026-10-30",
+   "ora": "17:30",
+   "casa": false,
+   "squadraCasa": "Civita Castellana",
+   "squadraOspite": "Bulldogs",
+   "sede": "Istituto Ragioneria - Via Petrarca, Civita Castellana",
+   "stato": "programmata",
+   "verifica": "ufficiale",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
+   "note": "Amichevole",
+   "storico": [],
+   "collegata": null
+  },
+  {
    "id": "bd-u15-1",
    "team": "bd-u15",
    "giornata": "1",
@@ -213,6 +247,23 @@ window.BASKET_DATA = {
    "storico": [],
    "collegata": null,
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
+  },
+  {
+   "id": "bd-u15-A2",
+   "team": "bd-u15",
+   "giornata": "A2",
+   "data": "2026-11-16",
+   "ora": "17:30",
+   "casa": false,
+   "squadraCasa": "Civita Castellana",
+   "squadraOspite": "Bulldogs",
+   "sede": "Istituto Ragioneria - Via Petrarca, Civita Castellana",
+   "stato": "programmata",
+   "verifica": "ufficiale",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
+   "note": "Amichevole",
+   "storico": [],
+   "collegata": null
   },
   {
    "id": "bd-eso-26",
@@ -556,23 +607,6 @@ window.BASKET_DATA = {
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
-   "id": "bd-aqu-1",
-   "team": "bd-aqu",
-   "giornata": "1",
-   "data": "2026-11-28",
-   "ora": "11:00",
-   "casa": true,
-   "squadraCasa": "Bulldogs",
-   "squadraOspite": "Blu Star Rosso",
-   "sede": "Tursport",
-   "stato": "programmata",
-   "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
-   "note": "",
-   "storico": [],
-   "collegata": null
-  },
-  {
    "id": "li-u10-1a",
    "team": "li-u10",
    "giornata": "1a",
@@ -589,6 +623,27 @@ window.BASKET_DATA = {
    "storico": [],
    "collegata": null,
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
+  },
+  {
+   "id": "bd-aqu-1",
+   "team": "bd-aqu",
+   "giornata": "1",
+   "data": "2026-11-28",
+   "ora": "15:30",
+   "casa": false,
+   "squadraCasa": "Blu Star Rosso",
+   "squadraOspite": "Bulldogs",
+   "sede": "Via Michelangelo Cagiano de Azevedo 4, Bagnoregio",
+   "stato": "programmata",
+   "verifica": "ufficiale",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
+   "note": "",
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: 28/11 ore 11:00 in casa (Tursport)"
+    }
+   ],
+   "collegata": null
   },
   {
    "id": "li-u14-1a",
@@ -700,16 +755,20 @@ window.BASKET_DATA = {
    "team": "bd-aqu",
    "giornata": "2",
    "data": "2026-12-06",
-   "ora": "10:00",
+   "ora": "16:00",
    "casa": false,
    "squadraCasa": "Soriano Virus",
    "squadraOspite": "Bulldogs",
    "sede": "Palazzetto Comunale",
    "stato": "programmata",
    "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
    "note": "",
-   "storico": [],
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: ore 10:00"
+    }
+   ],
    "collegata": null
   },
   {
@@ -780,23 +839,6 @@ window.BASKET_DATA = {
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "ConfederationCupCale.pdf",
-   "note": "",
-   "storico": [],
-   "collegata": null
-  },
-  {
-   "id": "bd-aqu-3",
-   "team": "bd-aqu",
-   "giornata": "3",
-   "data": "2026-12-12",
-   "ora": "10:00",
-   "casa": false,
-   "squadraCasa": "Virtus Capranica Basket",
-   "squadraOspite": "Bulldogs",
-   "sede": "Tensostruttura Rosa Simeoni",
-   "stato": "programmata",
-   "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
    "note": "",
    "storico": [],
    "collegata": null
@@ -963,6 +1005,27 @@ window.BASKET_DATA = {
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
+   "id": "bd-aqu-3",
+   "team": "bd-aqu",
+   "giornata": "3",
+   "data": "2026-12-19",
+   "ora": "11:00",
+   "casa": false,
+   "squadraCasa": "Virtus Capranica Basket",
+   "squadraOspite": "Bulldogs",
+   "sede": "Tensostruttura Rosa Simeoni",
+   "stato": "programmata",
+   "verifica": "ufficiale",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
+   "note": "",
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: 12/12 ore 10:00"
+    }
+   ],
+   "collegata": null
+  },
+  {
    "id": "li-u17-6a",
    "team": "li-u17",
    "giornata": "6a",
@@ -1043,7 +1106,7 @@ window.BASKET_DATA = {
    "sede": "Palestra Maurizio Mascioli",
    "stato": "programmata",
    "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
    "note": "",
    "storico": [],
    "collegata": null
@@ -1214,7 +1277,7 @@ window.BASKET_DATA = {
    "sede": "PalaMalè",
    "stato": "programmata",
    "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
    "note": "",
    "storico": [],
    "collegata": null
@@ -1307,6 +1370,27 @@ window.BASKET_DATA = {
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
+   "id": "bd-aqu-6",
+   "team": "bd-aqu",
+   "giornata": "6",
+   "data": "2027-01-23",
+   "ora": "11:00",
+   "casa": true,
+   "squadraCasa": "Bulldogs",
+   "squadraOspite": "Blu Star Rosso",
+   "sede": "IIS Margherita Hack - Via Falisca, snc, Rignano Flaminio",
+   "stato": "programmata",
+   "verifica": "ufficiale",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
+   "note": "",
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: 23/01 ore 15:30 in trasferta (Bagnoregio)"
+    }
+   ],
+   "collegata": null
+  },
+  {
    "id": "li-u14-1r",
    "team": "li-u14",
    "giornata": "1r",
@@ -1323,23 +1407,6 @@ window.BASKET_DATA = {
    "storico": [],
    "collegata": null,
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
-  },
-  {
-   "id": "bd-aqu-6",
-   "team": "bd-aqu",
-   "giornata": "6",
-   "data": "2027-01-23",
-   "ora": "15:30",
-   "casa": false,
-   "squadraCasa": "Blu Star Rosso",
-   "squadraOspite": "Bulldogs",
-   "sede": "Via Michelangelo Cagiano de Azevedo 4, Bagnoregio",
-   "stato": "programmata",
-   "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
-   "note": "",
-   "storico": [],
-   "collegata": null
   },
   {
    "id": "li-sen-1r",
@@ -1382,16 +1449,20 @@ window.BASKET_DATA = {
    "team": "bd-aqu",
    "giornata": "7",
    "data": "2027-01-30",
-   "ora": "11:00",
+   "ora": "16:00",
    "casa": true,
    "squadraCasa": "Bulldogs",
    "squadraOspite": "Soriano Virus",
-   "sede": "Tursport",
+   "sede": "IIS Margherita Hack - Via Falisca, snc, Rignano Flaminio",
    "stato": "programmata",
    "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
    "note": "",
-   "storico": [],
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: ore 11:00 (Tursport)"
+    }
+   ],
    "collegata": null
   },
   {
@@ -1512,12 +1583,16 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "Bulldogs",
    "squadraOspite": "Virtus Capranica Basket",
-   "sede": "Tursport",
+   "sede": "IIS Margherita Hack - Via Falisca, snc, Rignano Flaminio",
    "stato": "programmata",
    "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
    "note": "",
-   "storico": [],
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: campo Tursport"
+    }
+   ],
    "collegata": null
   },
   {
@@ -1599,12 +1674,16 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "Bulldogs",
    "squadraOspite": "Civita Basket",
-   "sede": "Tursport",
+   "sede": "IIS Margherita Hack - Via Falisca, snc, Rignano Flaminio",
    "stato": "programmata",
    "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
    "note": "",
-   "storico": [],
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: campo Tursport"
+    }
+   ],
    "collegata": null
   },
   {
@@ -1704,12 +1783,16 @@ window.BASKET_DATA = {
    "casa": true,
    "squadraCasa": "Bulldogs",
    "squadraOspite": "Pallacanestro Ants A",
-   "sede": "Tursport",
+   "sede": "IIS Margherita Hack - Via Falisca, snc, Rignano Flaminio",
    "stato": "programmata",
    "verifica": "ufficiale",
-   "fonte": "GIRONE 2 AQUILOTTI.pdf",
+   "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
    "note": "",
-   "storico": [],
+   "storico": [
+    {
+     "testo": "Calendario PDF Girone 2: campo Tursport"
+    }
+   ],
    "collegata": null
   },
   {
