@@ -146,7 +146,7 @@
   })();
 
   // ---------- Navigazione ----------
-  var VIEWS = ["partite", "calendario", "incroci", "stats", "luoghi", "impostazioni"];
+  var VIEWS = ["partite", "calendario", "incroci", "stats", "impostazioni"];
   function goView(view) {
     if (view === ui.view) return;
     var dir = VIEWS.indexOf(view) > VIEWS.indexOf(ui.view) ? "from-right" : "from-left";
@@ -158,7 +158,8 @@
       v.classList.toggle("active", on);
       if (on) v.classList.add(dir);
     });
-    $("filters").classList.toggle("hidden", ["partite", "calendario", "luoghi"].indexOf(view) < 0);
+    $("filters").classList.toggle("hidden", ["partite", "calendario"].indexOf(view) < 0);
+    $("btn-add").classList.toggle("hide", ["partite", "calendario"].indexOf(view) < 0);
     if (view === "stats") renderStats();
     window.scrollTo(0, 0);
   }
@@ -170,7 +171,7 @@
     var i = VIEWS.indexOf(ui.view); if (i < VIEWS.length - 1) goView(VIEWS[i + 1]);
   }, function () {
     var i = VIEWS.indexOf(ui.view); if (i > 0) goView(VIEWS[i - 1]);
-  }, "#cal-grid,#filters,.icon-pick");
+  }, "#cal-grid,#filters,.icon-pick,.search");
 
   // ---------- Filtri ----------
   function scopeTeams() {
@@ -270,15 +271,18 @@
     var st = g.storico && g.storico.length
       ? "<div>Storico:<ul>" + g.storico.map(function (s) { return "<li>" + esc(s.testo) + "</li>"; }).join("") + "</ul></div>"
       : "";
+    // tre azioni principali sempre visibili, le altre nel menu "Altro"
     var act = '<div class="actions">' +
-      (g.sede ? '<button class="btn ghost" data-act="map" data-id="' + g.id + '">Mappa</button>' : "") +
       '<button class="btn ghost" data-act="share" data-id="' + g.id + '">Condividi</button>' +
+      (g.sede ? '<button class="btn ghost" data-act="map" data-id="' + g.id + '">Mappa</button>' : "") +
+      '<button class="btn ghost" data-act="edit" data-id="' + g.id + '">Modifica</button>' +
+      '<button class="btn ghost more" data-act="more" data-id="' + g.id + '" aria-label="Altre azioni">⋯</button>' +
+      '</div><div class="actions extra">' +
       (Logic.isTraining(g) ? "" : '<button class="btn ghost" data-act="result" data-id="' + g.id + '">Risultato e referto</button>') +
       (Logic.isTraining(g) || g.stato === "annullata" ? "" : '<button class="btn ghost" data-act="img" data-id="' + g.id + '">Grafica</button>') +
       (Logic.isTraining(g) || g.stato === "annullata" ? "" : '<button class="btn ghost" data-act="live" data-id="' + g.id + '">' + (g.inCorso ? "Riprendi dal vivo" : "Dal vivo") + "</button>") +
       (Logic.esito(g, t) ? '<button class="btn ghost" data-act="recap" data-id="' + g.id + '">Riepilogo</button>' : "") +
       (Logic.isTraining(g) && g.stato !== "annullata" ? '<button class="btn ghost" data-act="pres" data-id="' + g.id + '">Presenze</button>' : "") +
-      '<button class="btn ghost" data-act="edit" data-id="' + g.id + '">Modifica</button>' +
       '<button class="btn ghost" data-act="toggle" data-id="' + g.id + '">' + (g.stato === "annullata" ? "Ripristina gara" : "Segna annullata") + "</button>" +
       "</div>";
     return '<div class="card game ' + t.club + (Logic.isTraining(g) ? " training" : "") + " " + (g.stato === "annullata" ? "annullata " : "") + (past ? "past" : "") + '" data-id="' + g.id + '">' +
@@ -287,7 +291,7 @@
       '<div class="team">' + logo(t.club) + esc(Logic.teamLabel(t)) + "</div>" +
       '<div class="match">' + esc(Logic.matchTitle(g)) + "</div>" +
       (Logic.esito(g, t) ? '<div class="score">' + g.risultato.casa + " – " + g.risultato.ospite + "</div>" : "") +
-      '<div class="meta">' + (g.sede ? esc(g.sede) : "Sede non indicata") + "</div>" +
+      '<div class="meta sede">' + (g.sede ? esc(g.sede) : "Sede non indicata") + "</div>" +
       (g.ritrovo && g.stato !== "annullata" ? '<div class="rit">🕐 Ritrovo ' + esc(g.ritrovo) + (g.luogoRitrovo ? " · " + esc(g.luogoRitrovo) : "") + "</div>" : "") +
       badges(g) +
       '<div class="details"><div class="in"><div>' + det.map(function (d) { return "<div>" + d + "</div>"; }).join("") + "</div>" + st +
@@ -307,6 +311,7 @@
         e.stopPropagation();
         var g = findGame(b.dataset.id);
         if (!g) return;
+        if (b.dataset.act === "more") { b.closest(".details").classList.toggle("show-extra"); FX.vibrate(6); return; }
         if (b.dataset.act === "map") openUrl(g.mappa || Logic.mapsUrl(g.sede));
         if (b.dataset.act === "edit") openEditor(g.id);
         if (b.dataset.act === "result") openResult(g.id);
@@ -402,7 +407,12 @@
   function renderList() {
     renderHero();
     var now = new Date();
+    var q = (ui.q || "").trim().toLowerCase();
     var games = filtered().filter(function (g) {
+      if (q) {
+        var hay = [Logic.matchTitle(g), g.sede, Logic.teamLabel(TM[g.team]), g.noteUtente, g.note, Logic.dayLabel(g.data)].join(" ").toLowerCase();
+        return hay.indexOf(q) >= 0; // con la ricerca mostro anche le partite passate
+      }
       return (ui.showPast || !Logic.isPast(g, now)) && (ui.showTrain || !Logic.isTraining(g));
     });
     var el = $("list");
@@ -1478,6 +1488,55 @@
 
   // ---------- Avvio ----------
   function renderFiltered() { renderList(); renderCalendar(); renderLuoghi(); }
+
+  // ---------- Elenco / Luoghi, ricerca, schede compatte, trascina per aggiornare ----------
+  document.querySelectorAll("#pmode button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("#pmode button").forEach(function (x) { x.classList.toggle("on", x === b); });
+      var l = b.dataset.mode === "luoghi";
+      $("pane-elenco").hidden = l; $("pane-luoghi").hidden = !l;
+      $(l ? "pane-luoghi" : "pane-elenco").classList.remove("pane-in"); void $("pane-elenco").offsetWidth;
+      $(l ? "pane-luoghi" : "pane-elenco").classList.add("pane-in");
+    });
+  });
+  var qTimer = null;
+  $("q").addEventListener("input", function (e) {
+    clearTimeout(qTimer);
+    qTimer = setTimeout(function () { ui.q = e.target.value; renderList(); }, 180);
+  });
+  function applyCompact(on) { document.body.classList.toggle("compact", on); $("compact").checked = on; }
+  applyCompact((function () { try { return localStorage.getItem("compatte") !== "0"; } catch (e) { return true; } })());
+  $("compact").addEventListener("change", function (e) {
+    try { localStorage.setItem("compatte", e.target.checked ? "1" : "0"); } catch (x) {}
+    applyCompact(e.target.checked);
+  });
+  (function pullToRefresh() {
+    var startY = 0, dy = 0, pulling = false, ptr = $("ptr");
+    var main = document.querySelector("main");
+    main.addEventListener("touchstart", function (e) {
+      pulling = ui.view === "partite" && window.scrollY <= 0 && !e.target.closest("input,textarea,select,.sheet");
+      startY = e.touches[0].clientY; dy = 0;
+    }, { passive: true });
+    main.addEventListener("touchmove", function (e) {
+      if (!pulling) return;
+      dy = e.touches[0].clientY - startY;
+      if (dy <= 0) { ptr.style.height = "0"; return; }
+      var h = Math.min(80, dy * 0.5);
+      ptr.style.height = h + "px";
+      ptr.classList.toggle("ready", h >= 60);
+      $("ptr-txt").textContent = h >= 60 ? "Rilascia per aggiornare" : "Trascina per aggiornare";
+    }, { passive: true });
+    main.addEventListener("touchend", function () {
+      if (!pulling) return;
+      pulling = false;
+      if (ptr.classList.contains("ready")) {
+        ptr.classList.add("loading"); $("ptr-txt").textContent = "Controllo i dati…";
+        FX.vibrate(12);
+        checkData(true); checkApp();
+        setTimeout(function () { ptr.classList.remove("loading", "ready"); ptr.style.height = "0"; }, 1400);
+      } else { ptr.classList.remove("ready"); ptr.style.height = "0"; }
+    });
+  })();
   function renderAll() {
     renderFiltered(); renderIncroci(); renderTeamSettings(); renderSedeCasa(); renderEditsStatus();
     if (ui.view === "stats") renderStats();

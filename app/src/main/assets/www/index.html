@@ -29,16 +29,28 @@
 
   <!-- PARTITE -->
   <section id="view-partite" class="view active">
+    <div class="ptr" id="ptr"><span class="ptr-ball"></span><span id="ptr-txt">Trascina per aggiornare</span></div>
     <div id="hero"></div>
-    <div class="row between">
-      <label class="check"><input type="checkbox" id="show-past"> Mostra passate</label>
-      <label class="check"><input type="checkbox" id="show-train" checked> Allenamenti</label>
+    <div class="seg sub" id="pmode">
+      <button data-mode="elenco" class="on">Elenco</button>
+      <button data-mode="luoghi">Luoghi</button>
     </div>
-    <div class="row">
-      <button class="btn small" id="btn-add">+ Aggiungi gara</button>
-      <button class="btn small ghost" id="btn-share">Condividi elenco</button>
+    <div id="pane-elenco">
+      <div class="search"><input type="search" id="q" placeholder="Cerca avversario, palestra, squadra…" autocomplete="off"></div>
+      <div class="row between">
+        <label class="check"><input type="checkbox" id="show-past"> Passate</label>
+        <label class="check"><input type="checkbox" id="show-train" checked> Allenamenti</label>
+        <button class="btn small ghost" id="btn-share">Condividi elenco</button>
+      </div>
+      <div id="list"></div>
     </div>
-    <div id="list"></div>
+    <div id="pane-luoghi" hidden>
+      <p class="hint">Palestre delle squadre filtrate. Tocca "Mappa" per aprire Google Maps.</p>
+    <div id="luoghi"></div>
+    <h2>Gare senza sede</h2>
+    <p class="hint">Il calendario non indica il luogo. Imposta la palestra di casa in Impostazioni o modifica la singola gara.</p>
+    <div id="senza-sede"></div>
+    </div>
   </section>
 
   <!-- CALENDARIO -->
@@ -82,14 +94,6 @@
     <div class="row" style="margin-top:12px"><button class="btn ghost" id="btn-report">Resoconto di stagione (PDF)</button></div>
   </section>
 
-  <!-- LUOGHI -->
-  <section id="view-luoghi" class="view">
-    <p class="hint">Palestre delle squadre filtrate. Tocca "Mappa" per aprire Google Maps.</p>
-    <div id="luoghi"></div>
-    <h2>Gare senza sede</h2>
-    <p class="hint">Il calendario non indica il luogo. Imposta la palestra di casa in Impostazioni o modifica la singola gara.</p>
-    <div id="senza-sede"></div>
-  </section>
 
   <!-- IMPOSTAZIONI -->
   <section id="view-impostazioni" class="view">
@@ -99,6 +103,7 @@
       <button data-theme="light"><span class="sw light"></span>Chiaro</button>
       <button data-theme="dark"><span class="sw dark"></span>Scuro</button>
     </div>
+    <label class="check" style="margin-top:12px"><input type="checkbox" id="compact" checked> Schede compatte (i dettagli si vedono toccando la partita)</label>
 
     <div class="solo-club" id="club-cal">
     <h2 id="ics-title">Calendario dell'iPhone</h2>
@@ -381,13 +386,14 @@
   </div>
 </div>
 
+<button class="fab" id="btn-add" aria-label="Aggiungi gara"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+
 <nav class="tabs">
   <button data-view="partite" class="on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Partite</span></button>
   <button data-view="calendario"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Calendario</span></button>
   <button data-view="incroci"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/></svg><span>Incroci</span></button>
   <button data-view="stats"><svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-6"/></svg><span>Statistiche</span></button>
-  <button data-view="luoghi"><svg viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span>Luoghi</span></button>
-  <button data-view="impostazioni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Impost.</span></button>
+  <button data-view="impostazioni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span>Impostazioni</span></button>
 </nav>
 
 <script src="config.js"></script>
