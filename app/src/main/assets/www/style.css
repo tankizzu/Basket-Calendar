@@ -344,3 +344,15 @@ body:not(.club-app) .solo-club{display:none}
 .badge.amichevole{background:#fff4cc;color:#8a6100}
 :root[data-theme=dark] .badge.amichevole{background:#3a3010;color:#f2c94c}
 @media (prefers-color-scheme: dark){:root:not([data-theme=light]) .badge.amichevole{background:#3a3010;color:#f2c94c}}
+
+/* Impostazioni a sezioni */
+details.sect{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin:8px 0;box-shadow:var(--shadow);overflow:hidden}
+details.sect>summary{list-style:none;cursor:pointer;padding:14px 16px;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:space-between;color:var(--ink)}
+details.sect>summary::-webkit-details-marker{display:none}
+details.sect>summary::after{content:"";width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform var(--med) var(--ease);margin-right:4px}
+details.sect[open]>summary::after{transform:rotate(225deg)}
+details.sect[open]>summary{border-bottom:1px solid var(--line)}
+details.sect .sect-body{padding:12px 12px 6px;animation:viewIn var(--med) var(--ease)}
+details.sect .sect-body>.card{box-shadow:none}
+details.sect .sect-body>.card.form{border:0;padding:0}
+#view-impostazioni{padding-top:6px}

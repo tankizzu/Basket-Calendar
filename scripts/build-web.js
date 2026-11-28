@@ -100,14 +100,14 @@ function ics(nome, games) {
     const t = TM[g.team], tr = L.isTraining(g);
     let fine = g.oraFine;
     if (!fine) { const e = new Date(L.toDate(g.data, g.ora).getTime() + 2 * 3600000); fine = pad(e.getHours()) + ":" + pad(e.getMinutes()); }
-    const titolo = tr ? L.matchTitle(g).replace(/ \d\d:\d\d–\d\d:\d\d$/, "") : "[" + t.nome + "] " + L.matchTitle(g) + (g.verifica === "utente" ? " (da confermare)" : "");
+    const titolo = tr ? L.matchTitle(g).replace(/ \d\d:\d\d–\d\d:\d\d$/, "") : "[" + t.nome + "] " + L.matchTitle(g) + (g.daConfermare ? " (da confermare)" : "");
     const desc = [tr ? "" : t.campionato, tr ? "" : (g.casa ? "In casa" : "In trasferta"),
       g.ritrovo ? "Ritrovo ore " + g.ritrovo + (g.luogoRitrovo ? " · " + g.luogoRitrovo : "") : "",
       g.stato === "recupero" ? "Recupero" : "", g.note || ""].filter(Boolean).join("\n");
     L2.push("BEGIN:VEVENT", "UID:" + g.id + "@calendari-basket", "DTSTAMP:" + stamp,
       "DTSTART;TZID=Europe/Rome:" + dt(g.data, g.ora), "DTEND;TZID=Europe/Rome:" + dt(g.data, fine),
       "SUMMARY:" + esc(titolo), "LOCATION:" + esc(g.sede || ""), "DESCRIPTION:" + esc(desc),
-      "STATUS:" + (g.stato === "annullata" ? "CANCELLED" : (g.verifica === "utente" ? "TENTATIVE" : "CONFIRMED")));
+      "STATUS:" + (g.stato === "annullata" ? "CANCELLED" : (g.daConfermare ? "TENTATIVE" : "CONFIRMED")));
     if (!tr && g.stato !== "annullata") {
       L2.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + esc(titolo), "TRIGGER:-PT3H", "END:VALARM");
     }

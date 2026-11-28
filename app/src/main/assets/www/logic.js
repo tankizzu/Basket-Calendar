@@ -224,7 +224,7 @@ var Logic = (function () {
       var t = tm[g.team];
       var start = toDate(g.data, g.ora);
       var where = isTraining(g) ? "allenamento" : (g.casa ? "in casa" : "trasferta");
-      var conf = g.verifica === "utente" ? " · da confermare" : "";
+      var conf = g.daConfermare ? " · da confermare" : "";
       var when = dayLabel(g.data) + " ore " + g.ora;
 
       var orgDays = settings.orgGiorni;
@@ -281,7 +281,7 @@ var Logic = (function () {
         teamLabel(t) + " · " + t.campionato,
         g.casa ? "In casa" : "Trasferta",
         g.stato === "recupero" ? "Recupero" : "",
-        g.aggiunta ? "Gara aggiunta da te" : (g.verifica === "utente" ? "Aggiornamento non ufficiale: da confermare" : "Fonte: " + g.fonte),
+        g.aggiunta ? "Gara aggiunta da te" : (g.daConfermare ? "Da confermare" : "Fonte: " + g.fonte),
         g.note || "",
         g.noteUtente || "",
         "Durata indicativa: 2 ore"
@@ -289,7 +289,7 @@ var Logic = (function () {
       return {
         id: g.id,
         titolo: "[" + t.nome + (t.club === "LIONS" ? " LIONS" : " BD") + (g.amichevole ? " · amichevole" : "") + "] " + matchTitle(g) +
-          (g.verifica === "utente" ? " (da confermare)" : ""),
+          (g.daConfermare ? " (da confermare)" : ""),
         luogo: g.sede || (g.casa ? "Casa" : ""),
         descrizione: desc,
         inizio: start,
@@ -400,6 +400,7 @@ var Logic = (function () {
         if (m.luogoRitrovo !== undefined) g.luogoRitrovoUtente = m.luogoRitrovo;
         if (m.passaggi !== undefined) g.passaggi = m.passaggi;
         if (m.amichevole !== undefined) g.amichevole = m.amichevole;
+        if (m.daConfermare !== undefined) g.daConfermare = m.daConfermare;
         if (!g0.aggiunta) {
           g.verifica = "utente";
           g.modificata = m.quando || "";
@@ -537,7 +538,8 @@ var Logic = (function () {
     return {
       id: id, team: teamId, giornata: f.giornata || "", data: f.data, ora: f.ora, casa: !!f.casa,
       squadraCasa: f.casa ? club : f.avversario, squadraOspite: f.casa ? f.avversario : club,
-      sede: f.sede || "", stato: f.stato || "programmata", verifica: "utente", fonte: "Aggiunta da te", amichevole: !!f.amichevole,
+      sede: f.sede || "", stato: f.stato || "programmata", verifica: "utente", fonte: "Aggiunta da te", amichevole: !!f.amichevole, daConfermare: !!f.daConfermare,
+      ritrovoUtente: f.ritrovo || "", luogoRitrovoUtente: f.luogoRitrovo || "",
       note: "", noteUtente: f.note || "", storico: [], collegata: null, aggiunta: true
     };
   }
@@ -582,7 +584,7 @@ var Logic = (function () {
       lines.push("🏁 " + scoreLine(g));
       if (g.risultato.parziali && g.risultato.parziali.length) lines.push("📊 Parziali: " + parzialiText(g.risultato));
     }
-    if (g.verifica === "utente" && !isTraining(g)) lines.push("⚠️ Da confermare");
+    if (g.daConfermare && !isTraining(g)) lines.push("⚠️ Da confermare");
     if (g.noteUtente) lines.push("📝 " + g.noteUtente);
     return lines.join("\n");
   }

@@ -119,6 +119,32 @@
     if (A && A.openUrl) A.openUrl(url); else window.open(url, "_blank");
   }
 
+  // ---------- Impostazioni a sezioni richiudibili (chiuse all'apertura) ----------
+  (function collapseSettings() {
+    var root = document.getElementById("view-impostazioni");
+    Array.prototype.slice.call(root.querySelectorAll("h2")).forEach(function (h) {
+      var d = document.createElement("details");
+      d.className = "sect";
+      var sm = document.createElement("summary");
+      sm.textContent = h.textContent;
+      if (h.id) sm.id = h.id; // es. titolo che cambia testo (calendario in abbonamento)
+      d.appendChild(sm);
+      var parent = h.parentNode, n = h.nextSibling;
+      parent.insertBefore(d, h);
+      parent.removeChild(h);
+      // si ferma al titolo successivo, anche se è dentro un contenitore (sezioni solo-app, solo-club…)
+      while (n && !(n.nodeType === 1 && (n.tagName === "H2" || n.id === "data-version" || n.querySelector("h2, details.sect")))) {
+        var next = n.nextSibling;
+        d.appendChild(n);
+        n = next;
+      }
+      var body = document.createElement("div");
+      body.className = "sect-body";
+      while (d.childNodes.length > 1) body.appendChild(d.childNodes[1]);
+      d.appendChild(body);
+    });
+  })();
+
   // ---------- Navigazione ----------
   var VIEWS = ["partite", "calendario", "incroci", "stats", "luoghi", "impostazioni"];
   function goView(view) {
@@ -220,7 +246,7 @@
     if (g.presenti) b.push('<span class="badge casa">' + g.presenti.length + " presenti</span>");
     if (g.aggiunta) b.push('<span class="badge mod">Aggiunta da te</span>');
     else if (g.modificata !== undefined) b.push('<span class="badge mod">Modificata da te</span>');
-    if (g.verifica === "utente" && !g.aggiunta) b.push('<span class="badge utente">Da confermare</span>');
+    if (g.daConfermare) b.push('<span class="badge utente">Da confermare</span>');
     return '<div class="badges">' + b.join("") + "</div>";
   }
 
@@ -456,7 +482,7 @@
           var t = TM[g.team];
           return '<div class="l"><b>' + esc(g.ora) + "</b> " + esc(Logic.teamLabel(t)) + ": " +
             esc(Logic.matchTitle(g)) + " · " + (g.casa ? "casa" : "trasferta") +
-            (g.verifica === "utente" ? " · da confermare" : "") + "</div>";
+            (g.daConfermare ? " · da confermare" : "") + "</div>";
         }).join("") + "</div>";
     }).join("");
   }
@@ -530,6 +556,9 @@
       if (fields.stato) b.stato = fields.stato;
       if (fields.note !== undefined) b.noteUtente = fields.note;
       if (fields.amichevole !== undefined) b.amichevole = fields.amichevole;
+      if (fields.daConfermare !== undefined) b.daConfermare = fields.daConfermare;
+      if (fields.ritrovo !== undefined) b.ritrovoUtente = fields.ritrovo;
+      if (fields.luogoRitrovo !== undefined) b.luogoRitrovoUtente = fields.luogoRitrovo;
       b.squadraCasa = b.casa ? club : avv;
       b.squadraOspite = b.casa ? avv : club;
       return;
@@ -568,6 +597,9 @@
       $("ed-tipo").value = "campionato";
       $("ed-note").value = "";
       $("ed-rit").value = "";
+      ritDefault = false;
+      $("ed-rit-hint").textContent = "Lascia vuoto per usare il ritrovo delle Impostazioni.";
+      $("ed-conf").checked = false;
       $("ed-lrit").value = "";
       $("ed-pass").value = "";
     } else {
@@ -582,8 +614,12 @@
       $("ed-stato").value = g.stato;
       $("ed-tipo").value = g.amichevole ? "amichevole" : "campionato";
       $("ed-note").value = g.noteUtente || "";
-      $("ed-rit").value = g.ritrovoUtente || "";
-      $("ed-lrit").value = g.luogoRitrovoUtente || "";
+      // il ritrovo parte da quello in uso (Impostazioni o già personalizzato) e si cambia qui per la singola gara
+      $("ed-rit").value = g.ritrovo || "";
+      $("ed-lrit").value = g.luogoRitrovo || "";
+      ritDefault = false;
+      $("ed-rit-hint").textContent = g.ritrovoUtente ? "Ritrovo personalizzato per questa gara." : "Ritrovo preso dalle Impostazioni: cambialo per questa sola gara.";
+      $("ed-conf").checked = !!g.daConfermare;
       $("ed-pass").value = g.passaggi || "";
       $("ed-rit").placeholder = g.ritrovo || "";
     }
@@ -591,7 +627,14 @@
     $("sheet-bg").classList.add("open");
   }
 
+  var ritDefault = false;
+  $("ed-rit-def").addEventListener("click", function () {
+    ritDefault = true; $("ed-rit").value = ""; $("ed-lrit").value = "";
+    $("ed-rit-hint").textContent = "Al salvataggio torna il ritrovo delle Impostazioni.";
+  });
+
   function setTrainingMode(on) {
+    $("ed-conf-wrap").style.display = on ? "none" : "";
     $("ed-rit-wrap").style.display = on ? "none" : "";
     $("ed-pass-wrap").style.display = on ? "none" : "";
     $("ed-tipo-wrap").style.display = on ? "none" : "";
@@ -624,6 +667,7 @@
     } else if (!f.data || !f.ora || !f.avversario) { $("ed-err").textContent = "Servono data, ora e avversario."; return; }
     if (!ui.editId) {
       var team = $("ed-team").value;
+      f.ritrovo = $("ed-rit").value; f.luogoRitrovo = $("ed-lrit").value.trim(); f.daConfermare = $("ed-conf").checked;
       edits.add.push(Logic.newGame(team, TM[team].club, f));
     } else {
       var g = findGame(ui.editId);
@@ -642,8 +686,12 @@
       if (!tr && f.amichevole !== !!g.amichevole) ch.amichevole = f.amichevole;
       if (f.note !== (g.noteUtente || "")) ch.note = f.note;
       var rit = $("ed-rit").value, lrit = $("ed-lrit").value.trim();
-      if (!tr && rit !== (g.ritrovoUtente || "")) ch.ritrovo = rit;
-      if (!tr && lrit !== (g.luogoRitrovoUtente || "")) ch.luogoRitrovo = lrit;
+      if (!tr && ritDefault) { if (g.ritrovoUtente) ch.ritrovo = ""; if (g.luogoRitrovoUtente) ch.luogoRitrovo = ""; }
+      else {
+        if (!tr && rit !== (g.ritrovo || "")) ch.ritrovo = rit;
+        if (!tr && lrit !== (g.luogoRitrovo || "")) ch.luogoRitrovo = lrit;
+      }
+      if (!tr && $("ed-conf").checked !== !!g.daConfermare) ch.daConfermare = $("ed-conf").checked;
       var pas = $("ed-pass").value.trim();
       if (!tr && pas !== (g.passaggi || "")) ch.passaggi = pas;
       if (Object.keys(ch).length) setMod(ui.editId, ch);

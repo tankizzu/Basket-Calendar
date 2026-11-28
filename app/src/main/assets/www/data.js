@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 14,
+ "rev": 15,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -819,7 +819,7 @@ window.BASKET_DATA = {
    "squadraOspite": "LIONS",
    "sede": "Pala Supernova, palestra I.C. Fregene - Via Serrenti 70, Passoscuro",
    "stato": "programmata",
-   "verifica": "utente",
+   "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
    "note": "Spostata: evidenziata nella tabella.",
    "storico": [
@@ -892,9 +892,9 @@ window.BASKET_DATA = {
    "squadraOspite": "Tuscania",
    "sede": "Pallone S. Delogu - Castelnuovo di Porto",
    "stato": "programmata",
-   "verifica": "utente",
+   "verifica": "ufficiale",
    "fonte": "Tabella Amatori Senior (27/11/2026)",
-   "note": "Data diversa dall'ICS e non evidenziata nella tabella: da confermare.",
+   "note": "Data diversa dall'ICS (19/12): vale la tabella.",
    "storico": [
     {
      "testo": "ICS 13/11/2026: 19/12/2026 ore 21:30"
@@ -1479,9 +1479,9 @@ window.BASKET_DATA = {
    "squadraOspite": "PRO Club Under 16",
    "sede": "",
    "stato": "recupero",
-   "verifica": "utente",
+   "verifica": "ufficiale",
    "fonte": "Aggiornamento utente",
-   "note": "Recupero gara n. 1. Conferma ufficiale e sede da verificare con società/organizzazione.",
+   "note": "Recupero gara n. 1.",
    "storico": [
     {
      "testo": "Proposta precedente: 30/01/2027 ore 16:00 (superata)"

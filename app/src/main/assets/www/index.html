@@ -230,9 +230,13 @@
     </label>
     <label id="ed-avv-wrap">Avversario <input type="text" id="ed-avv"></label>
     <label>Sede (palestra e indirizzo) <input type="text" id="ed-sede"></label>
-    <div class="row2" id="ed-rit-wrap">
-      <label>Ritrovo (ora) <input type="time" id="ed-rit"></label>
-      <label>Luogo ritrovo <input type="text" id="ed-lrit"></label>
+    <div id="ed-rit-wrap">
+      <div class="row2">
+        <label>Ritrovo (ora) <input type="time" id="ed-rit"></label>
+        <label>Luogo ritrovo <input type="text" id="ed-lrit"></label>
+      </div>
+      <p class="hint" style="margin:-4px 0 8px" id="ed-rit-hint"></p>
+      <div class="row"><button class="btn ghost small" type="button" id="ed-rit-def">Usa il ritrovo delle Impostazioni</button></div>
     </div>
     <label id="ed-tipo-wrap">Tipo di gara
       <select id="ed-tipo"><option value="campionato">Campionato</option><option value="amichevole">Amichevole</option></select>
@@ -245,6 +249,7 @@
       </select>
     </label>
     <label id="ed-pass-wrap">Passaggi (chi guida, posti liberi) <input type="text" id="ed-pass" placeholder="es. Marco 3 posti, Luca 2"></label>
+    <label class="check" id="ed-conf-wrap" style="margin:0 0 10px"><input type="checkbox" id="ed-conf"> Da confermare (compare nei messaggi)</label>
     <label>Note <input type="text" id="ed-note"></label>
     <p class="status ko" id="ed-err"></p>
     <div class="row">
