@@ -341,3 +341,6 @@ html{transition:background .3s}
 .game .livebadge{background:var(--warn);color:#fff}
 body:not(.club-app) .solo-club{display:none}
 .lv-score{grid-template-columns:1fr 1fr}.lv-mid{grid-column:1/-1;order:3}
+.badge.amichevole{background:#fff4cc;color:#8a6100}
+:root[data-theme=dark] .badge.amichevole{background:#3a3010;color:#f2c94c}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) .badge.amichevole{background:#3a3010;color:#f2c94c}}

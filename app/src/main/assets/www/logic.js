@@ -151,7 +151,7 @@ var Logic = (function () {
     var r = g.risultato, mineCasa = g.squadraCasa === t.club;
     var noi = mineCasa ? r.casa : r.ospite, loro = mineCasa ? r.ospite : r.casa;
     var opp = mineCasa ? g.squadraOspite : g.squadraCasa;
-    var lines = ["🏀 *" + teamLabel(t) + "* · " + cap(dayLabel(g.data))];
+    var lines = ["🏀 *" + teamLabel(t) + "* · " + (g.amichevole ? "Amichevole · " : "") + cap(dayLabel(g.data))];
     lines.push((e === "vinta" ? "✅ Vittoria" : e === "persa" ? "❌ Sconfitta" : "🤝 Pareggio") + " " +
       (g.casa ? "in casa" : "in trasferta") + " contro " + opp + ": *" + noi + "–" + loro + "*");
     if (r.parziali && r.parziali.length) {
@@ -288,7 +288,7 @@ var Logic = (function () {
       ].filter(Boolean).join("\n");
       return {
         id: g.id,
-        titolo: "[" + t.nome + (t.club === "LIONS" ? " LIONS" : " BD") + "] " + matchTitle(g) +
+        titolo: "[" + t.nome + (t.club === "LIONS" ? " LIONS" : " BD") + (g.amichevole ? " · amichevole" : "") + "] " + matchTitle(g) +
           (g.verifica === "utente" ? " (da confermare)" : ""),
         luogo: g.sede || (g.casa ? "Casa" : ""),
         descrizione: desc,
@@ -399,6 +399,7 @@ var Logic = (function () {
         if (m.ritrovo !== undefined) g.ritrovoUtente = m.ritrovo;
         if (m.luogoRitrovo !== undefined) g.luogoRitrovoUtente = m.luogoRitrovo;
         if (m.passaggi !== undefined) g.passaggi = m.passaggi;
+        if (m.amichevole !== undefined) g.amichevole = m.amichevole;
         if (!g0.aggiunta) {
           g.verifica = "utente";
           g.modificata = m.quando || "";
@@ -476,7 +477,8 @@ var Logic = (function () {
   function stats(data, teamId) {
     var tm = teamMap(data);
     var t = tm[teamId];
-    var games = data.partite.filter(function (g) { return g.team === teamId && !isTraining(g) && g.stato !== "annullata" && esito(g, t); });
+    // statistiche di squadra solo sulle gare di campionato (le amichevoli non contano)
+    var games = data.partite.filter(function (g) { return g.team === teamId && !isTraining(g) && !g.amichevole && g.stato !== "annullata" && esito(g, t); });
     var s = { giocate: games.length, vinte: 0, perse: 0, pari: 0, fatti: 0, subiti: 0, quarti: [], partite: [] };
     var q = [];
     games.forEach(function (g) {
@@ -496,7 +498,7 @@ var Logic = (function () {
     // Giocatori per numero di maglia (dalle gare con tabellino, anche senza risultato)
     var pl = {};
     data.partite.forEach(function (g) {
-      if (g.team !== teamId || isTraining(g) || g.stato === "annullata" || !g.tabellino) return;
+      if (g.team !== teamId || isTraining(g) || g.amichevole || g.stato === "annullata" || !g.tabellino) return;
       g.tabellino.forEach(function (r) {
         var k = String(r.n);
         var x = pl[k] = pl[k] || { n: r.n, partite: 0, partitePunti: 0, punti: 0, falli: 0, max: 0 };
@@ -535,7 +537,7 @@ var Logic = (function () {
     return {
       id: id, team: teamId, giornata: f.giornata || "", data: f.data, ora: f.ora, casa: !!f.casa,
       squadraCasa: f.casa ? club : f.avversario, squadraOspite: f.casa ? f.avversario : club,
-      sede: f.sede || "", stato: f.stato || "programmata", verifica: "utente", fonte: "Aggiunta da te",
+      sede: f.sede || "", stato: f.stato || "programmata", verifica: "utente", fonte: "Aggiunta da te", amichevole: !!f.amichevole,
       note: "", noteUtente: f.note || "", storico: [], collegata: null, aggiunta: true
     };
   }
@@ -562,7 +564,7 @@ var Logic = (function () {
   // Testo da incollare nelle chat (formattazione WhatsApp).
   function shareText(g, t) {
     var lines = [];
-    var head = isTraining(g) ? "🏀 *Allenamento " + (g.gruppo || teamLabel(t)) + "*" : "🏀 *" + teamLabel(t) + "* · " + t.campionato;
+    var head = isTraining(g) ? "🏀 *Allenamento " + (g.gruppo || teamLabel(t)) + "*" : "🏀 *" + teamLabel(t) + "* · " + (g.amichevole ? "Amichevole" : t.campionato);
     lines.push(head);
     if (g.stato === "annullata") lines.push("❌ *ANNULLATA*");
     lines.push("📅 " + cap(dayLabel(g.data)) + " · ⏰ " + g.ora + (g.oraFine ? "–" + g.oraFine : ""));

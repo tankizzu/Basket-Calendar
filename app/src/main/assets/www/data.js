@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 13,
+ "rev": 14,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -192,9 +192,10 @@ window.BASKET_DATA = {
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
-   "note": "Amichevole",
+   "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "amichevole": true
   },
   {
    "id": "bd-aqu-A1",
@@ -209,9 +210,10 @@ window.BASKET_DATA = {
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
-   "note": "Amichevole",
+   "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "amichevole": true
   },
   {
    "id": "bd-u15-1",
@@ -261,9 +263,10 @@ window.BASKET_DATA = {
    "stato": "programmata",
    "verifica": "ufficiale",
    "fonte": "Foglio partite Bulldogs (agg. 20/11/2026)",
-   "note": "Amichevole",
+   "note": "",
    "storico": [],
-   "collegata": null
+   "collegata": null,
+   "amichevole": true
   },
   {
    "id": "bd-eso-26",

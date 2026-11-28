@@ -216,6 +216,7 @@
     if (es) b.push('<span class="badge esito ' + es + '">' + { vinta: "Vinta", persa: "Persa", pari: "Pari" }[es] + "</span>");
     if (g.foto && g.foto.length) b.push('<span class="badge">Referto 📷</span>');
     if (g.inCorso) b.push('<span class="badge livebadge">● In corso</span>');
+    if (g.amichevole) b.push('<span class="badge amichevole">Amichevole</span>');
     if (g.presenti) b.push('<span class="badge casa">' + g.presenti.length + " presenti</span>");
     if (g.aggiunta) b.push('<span class="badge mod">Aggiunta da te</span>');
     else if (g.modificata !== undefined) b.push('<span class="badge mod">Modificata da te</span>');
@@ -528,6 +529,7 @@
       if (fields.sede !== undefined) b.sede = fields.sede;
       if (fields.stato) b.stato = fields.stato;
       if (fields.note !== undefined) b.noteUtente = fields.note;
+      if (fields.amichevole !== undefined) b.amichevole = fields.amichevole;
       b.squadraCasa = b.casa ? club : avv;
       b.squadraOspite = b.casa ? avv : club;
       return;
@@ -563,6 +565,7 @@
       $("ed-avv").value = "";
       $("ed-sede").value = "";
       $("ed-stato").value = "programmata";
+      $("ed-tipo").value = "campionato";
       $("ed-note").value = "";
       $("ed-rit").value = "";
       $("ed-lrit").value = "";
@@ -577,6 +580,7 @@
       $("ed-avv").value = g.casa ? g.squadraOspite : g.squadraCasa;
       $("ed-sede").value = g.sedeDaImpostazioni ? "" : (g.sede || "");
       $("ed-stato").value = g.stato;
+      $("ed-tipo").value = g.amichevole ? "amichevole" : "campionato";
       $("ed-note").value = g.noteUtente || "";
       $("ed-rit").value = g.ritrovoUtente || "";
       $("ed-lrit").value = g.luogoRitrovoUtente || "";
@@ -590,6 +594,7 @@
   function setTrainingMode(on) {
     $("ed-rit-wrap").style.display = on ? "none" : "";
     $("ed-pass-wrap").style.display = on ? "none" : "";
+    $("ed-tipo-wrap").style.display = on ? "none" : "";
     $("ed-fine-wrap").style.display = on ? "" : "none";
     $("ed-casa-wrap").style.display = on ? "none" : "";
     $("ed-avv-wrap").style.display = on ? "none" : "";
@@ -612,7 +617,7 @@
     var f = {
       data: $("ed-data").value, ora: $("ed-ora").value, oraFine: $("ed-fine").value, casa: $("ed-casa").value === "1",
       avversario: $("ed-avv").value.trim(), sede: $("ed-sede").value.trim(),
-      stato: $("ed-stato").value, note: $("ed-note").value.trim()
+      stato: $("ed-stato").value, note: $("ed-note").value.trim(), amichevole: $("ed-tipo").value === "amichevole"
     };
     if (tr) {
       if (!f.data || !f.ora || !f.oraFine) { $("ed-err").textContent = "Servono data, ora di inizio e di fine."; return; }
@@ -634,6 +639,7 @@
       var sedeOld = g.sedeDaImpostazioni ? "" : (g.sede || "");
       if (f.sede !== sedeOld) ch.sede = f.sede;
       if (f.stato !== g.stato) ch.stato = f.stato;
+      if (!tr && f.amichevole !== !!g.amichevole) ch.amichevole = f.amichevole;
       if (f.note !== (g.noteUtente || "")) ch.note = f.note;
       var rit = $("ed-rit").value, lrit = $("ed-lrit").value.trim();
       if (!tr && rit !== (g.ritrovoUtente || "")) ch.ritrovo = rit;
@@ -1053,7 +1059,7 @@
     $("img-sheet").classList.add("open");
     $("sheet-bg").classList.add("open");
     FX.cardImage({
-      tipo: post ? "post" : "pre", club: t.club, squadra: Logic.teamLabel(t), campionato: t.campionato,
+      tipo: post ? "post" : "pre", club: t.club, squadra: Logic.teamLabel(t), campionato: g.amichevole ? "Amichevole" : t.campionato,
       giorno: gd.charAt(0).toUpperCase() + gd.slice(1), ora: g.ora, casa: g.casa, casaNome: g.squadraCasa, ospiteNome: g.squadraOspite,
       ritrovo: g.ritrovo, luogoRitrovo: g.luogoRitrovo, sede: g.sede, ris: g.risultato, marcatori: top,
       tab: post ? (g.tabellino || []).slice().sort(function (a, b) { return (b.p || 0) - (a.p || 0) || b.f - a.f || a.n - b.n; }) : [],
