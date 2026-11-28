@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 10,
+ "rev": 11,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -478,6 +478,81 @@ window.BASKET_DATA = {
    "note": "",
    "storico": [],
    "collegata": null,
+   "risultato": {
+    "casa": 16,
+    "ospite": 23,
+    "parziali": [
+     [
+      6,
+      8
+     ],
+     [
+      6,
+      7
+     ],
+     [
+      2,
+      4
+     ],
+     [
+      2,
+      4
+     ]
+    ],
+    "fonte": "Referto UISP gara 1024"
+   },
+   "tabellino": [
+    {
+     "n": 44,
+     "p": 6,
+     "f": 1
+    },
+    {
+     "n": 59,
+     "p": 4,
+     "f": 0
+    },
+    {
+     "n": 0,
+     "p": 2,
+     "f": 0
+    },
+    {
+     "n": 1,
+     "p": 2,
+     "f": 0
+    },
+    {
+     "n": 53,
+     "p": 2,
+     "f": 1
+    },
+    {
+     "n": 6,
+     "p": 0,
+     "f": 1
+    },
+    {
+     "n": 55,
+     "p": 0,
+     "f": 2
+    },
+    {
+     "n": 10,
+     "p": 0,
+     "f": 1
+    },
+    {
+     "n": 37,
+     "p": 0,
+     "f": 0
+    },
+    {
+     "n": 7,
+     "p": 0,
+     "f": 0
+    }
+   ],
    "mappa": "https://maps.app.goo.gl/U1QByRbHckL5UM7e6"
   },
   {
