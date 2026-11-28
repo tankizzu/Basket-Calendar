@@ -1,6 +1,6 @@
 window.BASKET_DATA = {
  "versione": "2026-11-27",
- "rev": 9,
+ "rev": 10,
  "allenamenti": [
   {
    "id": "bd-all-lun",
@@ -158,8 +158,8 @@ window.BASKET_DATA = {
    "club": "LIONS",
    "nome": "Under 10",
    "campionato": "Under 10 UISP",
-   "ruolo": null,
-   "mia": false
+   "ruolo": "assistente",
+   "mia": true
   },
   {
    "id": "li-u14",
