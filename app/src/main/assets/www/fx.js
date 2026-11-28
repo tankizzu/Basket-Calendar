@@ -98,7 +98,15 @@ var FX = (function () {
 
   // opts: {tipo:"pre"|"post", club, squadra, campionato, giorno, ora, casa, casaNome, ospiteNome, ritrovo, luogoRitrovo, sede, ris:{casa,ospite,parziali}, marcatori:[{n,p}]}
   function cardImage(o, cb) {
-    var W = 1080, H = 1350;
+    var W = 1080, BASE_H = 1350;
+    // Dopo la partita: sezione statistiche sotto, l'immagine si allunga (da scorrere)
+    var tab = (o.tipo === "post" && o.tab) ? o.tab : [];
+    var qs = (o.tipo === "post" && o.quarti) ? o.quarti : [];
+    var extra = 0;
+    if (qs.length) extra += 140 + qs.length * 78;
+    if (tab.length) extra += 170 + tab.length * 70;
+    if (extra) extra += 220;
+    var H = BASE_H + extra;
     var c = document.createElement("canvas"); c.width = W; c.height = H;
     var x = c.getContext("2d");
     var bd = o.club !== "LIONS";
@@ -153,7 +161,8 @@ var FX = (function () {
           y += 40;
         }
         x.font = "500 32px system-ui, Roboto, sans-serif"; x.globalAlpha = .75;
-        x.fillText(o.giorno, cx, H - 90); x.globalAlpha = 1;
+        x.fillText(o.giorno, cx, BASE_H - 90); x.globalAlpha = 1;
+        if (extra) drawStats(x, o, BASE_H, W, acc, tab, qs);
       } else {
         fitText(x, o.giorno, 960, 76, "900");
         x.fillText(o.giorno, cx, y + 40);
@@ -182,6 +191,67 @@ var FX = (function () {
       }
       cb(c.toDataURL("image/png"));
     });
+  }
+
+  // Sezione statistiche: parziali per quarto e tabellino per numero di maglia.
+  function drawStats(x, o, top, W, acc, tab, qs) {
+    var pad = 70, y = top + 30;
+    // linea di separazione
+    x.fillStyle = acc; x.fillRect(pad, y, W - 2 * pad, 4);
+    y += 80;
+    x.fillStyle = "#fff"; x.textAlign = "left";
+    x.font = "800 44px system-ui, Roboto, sans-serif"; x.fillText("STATISTICHE", pad, y);
+    y += 30;
+    if (qs.length) {
+      y += 60;
+      x.font = "700 30px system-ui, Roboto, sans-serif"; x.globalAlpha = .75; x.fillText("Punti per quarto", pad, y); x.globalAlpha = 1;
+      x.textAlign = "right"; x.font = "600 26px system-ui, Roboto, sans-serif"; x.globalAlpha = .75;
+      x.fillText(o.noiNome + "   ·   " + o.loroNome, W - pad, y); x.globalAlpha = 1; x.textAlign = "left";
+      y += 30;
+      var max = 1; qs.forEach(function (q) { max = Math.max(max, q[0], q[1]); });
+      var bw = (W - 2 * pad - 260) / 2;
+      qs.forEach(function (q, i) {
+        y += 78;
+        x.font = "800 34px system-ui, Roboto, sans-serif"; x.fillStyle = "#fff";
+        x.fillText(i < 4 ? (i + 1) + "° Q" : "Suppl.", pad, y);
+        // barra nostra (verso sinistra dal centro) e loro (verso destra)
+        var mid = pad + 160 + bw;
+        x.fillStyle = acc; x.fillRect(mid - bw * q[0] / max, y - 30, bw * q[0] / max, 34);
+        x.fillStyle = "rgba(255,255,255,.45)"; x.fillRect(mid + 12, y - 30, bw * q[1] / max, 34);
+        x.fillStyle = "#fff"; x.font = "800 32px system-ui, Roboto, sans-serif";
+        x.textAlign = "right"; x.fillText(String(q[0]), mid - bw * q[0] / max - 12, y);
+        x.textAlign = "left"; x.fillText(String(q[1]), mid + 24 + bw * q[1] / max, y);
+      });
+      y += 30;
+    }
+    if (tab.length) {
+      y += 90;
+      x.textAlign = "left"; x.fillStyle = "#fff";
+      x.font = "700 30px system-ui, Roboto, sans-serif"; x.globalAlpha = .75; x.fillText("Tabellino " + o.noiNome, pad, y);
+      x.textAlign = "right"; x.fillText("PUNTI       FALLI", W - pad, y); x.globalAlpha = 1;
+      y += 20;
+      var maxp = 1; tab.forEach(function (r) { if (r.p != null) maxp = Math.max(maxp, r.p); });
+      tab.forEach(function (r, i) {
+        y += 70;
+        if (i % 2 === 0) { x.fillStyle = "rgba(255,255,255,.06)"; x.fillRect(pad - 16, y - 48, W - 2 * pad + 32, 66); }
+        x.fillStyle = "#fff"; x.textAlign = "left"; x.font = "900 40px system-ui, Roboto, sans-serif";
+        x.fillText("#" + r.n, pad, y);
+        if (r.p != null && r.p > 0) {
+          x.fillStyle = acc; x.globalAlpha = .9; x.fillRect(pad + 140, y - 30, (W - 2 * pad - 460) * r.p / maxp, 26); x.globalAlpha = 1;
+        }
+        x.fillStyle = "#fff"; x.textAlign = "right"; x.font = "800 40px system-ui, Roboto, sans-serif";
+        x.fillText(r.p == null ? "–" : String(r.p), W - pad - 170, y);
+        x.font = "700 36px system-ui, Roboto, sans-serif";
+        x.fillStyle = r.f >= 4 ? "#ff8a7a" : "#fff";
+        x.fillText(String(r.f || 0), W - pad - 20, y);
+      });
+      var tp = tab.reduce(function (s, r) { return s + (r.p || 0); }, 0), tf = tab.reduce(function (s, r) { return s + (r.f || 0); }, 0);
+      y += 70;
+      x.fillStyle = acc; x.fillRect(pad, y - 44, W - 2 * pad, 3);
+      x.fillStyle = "#fff"; x.textAlign = "left"; x.font = "800 34px system-ui, Roboto, sans-serif"; x.fillText("Totale", pad, y + 6);
+      x.textAlign = "right"; x.fillText(String(tp), W - pad - 170, y + 6); x.fillText(String(tf), W - pad - 20, y + 6);
+    }
+    x.textAlign = "center";
   }
 
   function roundRect(x, X, Y, w, h, r) {

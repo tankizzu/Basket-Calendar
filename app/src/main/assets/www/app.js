@@ -1055,7 +1055,10 @@
     FX.cardImage({
       tipo: post ? "post" : "pre", club: t.club, squadra: Logic.teamLabel(t), campionato: t.campionato,
       giorno: gd.charAt(0).toUpperCase() + gd.slice(1), ora: g.ora, casa: g.casa, casaNome: g.squadraCasa, ospiteNome: g.squadraOspite,
-      ritrovo: g.ritrovo, luogoRitrovo: g.luogoRitrovo, sede: g.sede, ris: g.risultato, marcatori: top
+      ritrovo: g.ritrovo, luogoRitrovo: g.luogoRitrovo, sede: g.sede, ris: g.risultato, marcatori: top,
+      tab: post ? (g.tabellino || []).slice().sort(function (a, b) { return (b.p || 0) - (a.p || 0) || b.f - a.f || a.n - b.n; }) : [],
+      quarti: post && g.risultato.parziali ? g.risultato.parziali.map(function (p) { return g.squadraCasa === t.club ? p : [p[1], p[0]]; }) : [],
+      noiNome: t.club, loroNome: g.squadraCasa === t.club ? g.squadraOspite : g.squadraCasa
     }, function (url) {
       imgData = url;
       imgName = (post ? "risultato-" : "partita-") + g.id + ".png";
